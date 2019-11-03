@@ -7,6 +7,7 @@ import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { CryptoModule } from './crypto/crypto.module';
 import { PostModule } from './post/post.module';
+import { ProfileModule } from './profile/profile.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -24,7 +25,7 @@ import { UserModule } from './user/user.module';
 				}
 			),
 			inject: [ ConfigService ],
-		}), AuthModule, UserModule, PostModule, ConfigModule, CryptoModule,
+		}), AuthModule, UserModule, PostModule, ConfigModule, CryptoModule, ProfileModule,
 	],
 	controllers: [ AppController ],
 	providers: [],

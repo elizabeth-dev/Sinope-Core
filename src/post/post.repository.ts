@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { UserEntity } from '../user/user.entity';
+import { ProfileEntity } from '../profile/profile.entity';
 import { PostEntity } from './post.entity';
 
 @EntityRepository(PostEntity)
@@ -29,21 +29,21 @@ export class PostRepository extends Repository<PostEntity> {
 
 	public like(
 		post: string | PostEntity,
-		user: string | UserEntity,
+		profile: string | ProfileEntity,
 	): Promise<void> {
 		return this.createQueryBuilder()
 			.relation(PostEntity, 'likes')
-			.of(post instanceof PostEntity ? post : { id: post })
-			.add(user instanceof UserEntity ? user : { id: user });
+			.of(post)
+			.add(profile);
 	}
 
 	public unLike(
 		post: string | PostEntity,
-		user: string | UserEntity,
+		profile: string | ProfileEntity,
 	): Promise<void> {
 		return this.createQueryBuilder()
 			.relation(PostEntity, 'likes')
-			.of(post instanceof PostEntity ? post : { id: post })
-			.remove(user instanceof UserEntity ? user : { id: user });
+			.of(post)
+			.remove(profile);
 	}
 }

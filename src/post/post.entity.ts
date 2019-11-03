@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
+import { ProfileEntity } from '../profile/profile.entity';
 import { UserEntity } from '../user/user.entity';
 
 @Entity()
@@ -13,19 +14,22 @@ export class PostEntity {
 	public date: Date;
 
 	@ManyToOne(
-		() => UserEntity,
-		(user) => user.posts,
+		() => ProfileEntity,
+		(profile) => profile.posts,
 		{
 			onDelete: 'CASCADE',
 			eager: true,
 		},
 	)
-	public author: UserEntity;
+	public author: ProfileEntity;
+
+	@ManyToOne(() => UserEntity, (user) => user.posts)
+	public authorUser: UserEntity;
 
 	@RelationId((post: PostEntity) => post.likes)
 	likeIds: string[];
 
-	@ManyToMany(() => UserEntity, (user) => user.likes, { onDelete: 'CASCADE' })
+	@ManyToMany(() => ProfileEntity, (profile) => profile.likes, { onDelete: 'CASCADE' })
 	@JoinTable()
-	public likes: UserEntity[];
+	public likes: ProfileEntity[];
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { from, Observable } from 'rxjs';
 
 import { DeleteResult } from 'typeorm';
+import { ProfileEntity } from '../profile/profile.entity';
 import { UserEntity } from '../user/user.entity';
 import { CreatePostDto } from './definitions/CreatePost.dto';
 
@@ -29,10 +30,12 @@ export class PostService {
 
 	public add(
 		newPost: CreatePostDto,
-		author: UserEntity,
+		author: ProfileEntity,
+		authorUser: UserEntity,
 	): Observable<PostEntity> {
 		const post = this.postRepo.create({
 			...newPost,
+			authorUser,
 			author,
 		});
 
@@ -40,20 +43,20 @@ export class PostService {
 	}
 
 	public delete(id: string): Observable<DeleteResult> {
-		return from(this.postRepo.delete({ id }));
+		return from(this.postRepo.delete(id));
 	}
 
 	public like(
 		post: string | PostEntity,
-		user: string | UserEntity,
+		profile: string | ProfileEntity,
 	): Observable<void> {
-		return from(this.postRepo.like(post, user));
+		return from(this.postRepo.like(post, profile));
 	}
 
 	public unLike(
 		post: string | PostEntity,
-		user: string | UserEntity,
+		profile: string | ProfileEntity,
 	): Observable<void> {
-		return from(this.postRepo.unLike(post, user));
+		return from(this.postRepo.unLike(post, profile));
 	}
 }

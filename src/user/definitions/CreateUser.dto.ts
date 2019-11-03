@@ -4,10 +4,6 @@ export class CreateUserDto {
 	@IsUUID()
 	public id: string;
 
-	@IsAlphanumeric()
-	@Length(1, 16)
-	public tag: string;
-
 	@IsString()
 	@Length(1, 32)
 	public name: string;

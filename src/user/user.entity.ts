@@ -1,13 +1,11 @@
 import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn } from 'typeorm';
 import { PostEntity } from '../post/post.entity';
+import { ProfileEntity } from '../profile/profile.entity';
 
 @Entity()
 export class UserEntity {
 	@PrimaryColumn({ type: 'uuid' })
 	public id: string;
-
-	@Column({ unique: true })
-	public tag: string;
 
 	@Column()
 	public name: string;
@@ -24,9 +22,9 @@ export class UserEntity {
 	@CreateDateColumn()
 	public created: Date;
 
-	@OneToMany(() => PostEntity, (post) => post.author)
-	posts: PostEntity[];
+	@ManyToMany(() => ProfileEntity, (profile) => profile.managers)
+	public profiles: ProfileEntity[];
 
-	@ManyToMany(() => PostEntity, (post) => post.likes)
-	public likes: PostEntity[];
+	@OneToMany(() => PostEntity, (post) => post.authorUser)
+	public posts: PostEntity[];
 }

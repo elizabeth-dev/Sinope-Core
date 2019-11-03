@@ -27,10 +27,9 @@ export class UserService {
 		}
 
 		if (typeof id === 'string') {
-			return from(this.userRepo.findOne({ id }));
+			return from(this.userRepo.findOne(id));
 		}
 
-		// TODO: Use id, not PK
 		return from(this.userRepo.findByIds(id));
 	}
 
@@ -54,17 +53,17 @@ export class UserService {
 		id: string,
 		partial: QueryDeepPartialEntity<UserEntity>,
 	): Observable<UpdateResult> {
-		return from(this.userRepo.update({ id }, partial));
+		return from(this.userRepo.update(id, partial));
 	}
 
 	public delete(id: string): Observable<DeleteResult> {
-		return from(this.userRepo.delete({ id }));
+		return from(this.userRepo.delete(id));
 	}
 
 	public setActivity(
 		id: string,
 		date?: Date,
 	): Observable<UpdateResult> {
-		return from(this.userRepo.update({ id }, { lastLogin: date || new Date() }));
+		return from(this.userRepo.update(id, { lastLogin: date || new Date() }));
 	}
 }
