@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable } from 'rxjs';
 
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult } from 'typeorm';
 import { UserEntity } from '../user/user.entity';
 import { CreatePostDto } from './definitions/CreatePost.dto';
 
 import { PostEntity } from './post.entity';
+import { PostRepository } from './post.repository';
 
 @Injectable()
 export class PostService {
-	constructor(@InjectRepository(PostEntity) private readonly postRepo: Repository<PostEntity>) {
+	constructor(private readonly postRepo: PostRepository) {
 	}
 
 	public get(id: string): Observable<PostEntity>;
@@ -21,10 +21,9 @@ export class PostService {
 		}
 
 		if (typeof id === 'string') {
-			return from(this.postRepo.findOne({ id }));
+			return from(this.postRepo.findOne(id));
 		}
 
-		// TODO: use id not PK
 		return from(this.postRepo.findByIds(id));
 	}
 
@@ -42,5 +41,19 @@ export class PostService {
 
 	public delete(id: string): Observable<DeleteResult> {
 		return from(this.postRepo.delete({ id }));
+	}
+
+	public like(
+		post: string | PostEntity,
+		user: string | UserEntity,
+	): Observable<void> {
+		return from(this.postRepo.like(post, user));
+	}
+
+	public unLike(
+		post: string | PostEntity,
+		user: string | UserEntity,
+	): Observable<void> {
+		return from(this.postRepo.unLike(post, user));
 	}
 }

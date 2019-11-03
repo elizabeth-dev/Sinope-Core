@@ -1,15 +1,9 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn } from 'typeorm';
 import { PostEntity } from '../post/post.entity';
 
 @Entity()
 export class UserEntity {
-	@PrimaryGeneratedColumn({ unsigned: true })
-	public privateId: number;
-
-	@Column({
-		unique: true,
-		type: 'uuid',
-	})
+	@PrimaryColumn({ type: 'uuid' })
 	public id: string;
 
 	@Column({ unique: true })
@@ -32,4 +26,7 @@ export class UserEntity {
 
 	@OneToMany(() => PostEntity, (post) => post.author)
 	posts: PostEntity[];
+
+	@ManyToMany(() => PostEntity, (post) => post.likes)
+	public likes: PostEntity[];
 }

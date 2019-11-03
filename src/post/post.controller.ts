@@ -1,15 +1,26 @@
-import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Delete,
+	ForbiddenException,
+	Get,
+	HttpCode,
+	NotFoundException,
+	Param,
+	Post,
+	Put,
+	UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { EMPTY, Observable } from 'rxjs';
-import { mergeMap } from 'rxjs/operators';
+import { mergeMap, tap } from 'rxjs/operators';
 
 import { User } from '../shared/decorators/user.decorator';
 
-import { UserEntity as UserEntity } from '../user/user.entity';
+import { UserEntity } from '../user/user.entity';
 
 import { CreatePostDto } from './definitions/CreatePost.dto';
-
 import { PostEntity } from './post.entity';
 import { PostService } from './post.service';
 
@@ -20,7 +31,11 @@ export class PostController {
 
 	@Get(':id')
 	public getById(@Param('id') id: string): Observable<PostEntity> {
-		return this.postService.get(id);
+		return this.postService.get(id).pipe(tap((post) => {
+			if (!post) {
+				throw new NotFoundException();
+			}
+		}));
 	}
 
 	@Post()
@@ -51,5 +66,25 @@ export class PostController {
 			throw new ForbiddenException();
 		}));
 
+	}
+
+	@Put(':id/likes')
+	@HttpCode(204)
+	@UseGuards(AuthGuard('jwt'))
+	public like(
+		@Param('id') id: string,
+		@User() user: UserEntity,
+	): Observable<void> {
+		return this.postService.like(id, user);
+	}
+
+	@Delete(':id/likes')
+	@HttpCode(204)
+	@UseGuards(AuthGuard('jwt'))
+	public unLike(
+		@Param('id') id: string,
+		@User() user: UserEntity,
+	): Observable<void> {
+		return this.postService.unLike(id, user);
 	}
 }

@@ -1,15 +1,9 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
 import { UserEntity } from '../user/user.entity';
 
 @Entity()
 export class PostEntity {
-	@PrimaryGeneratedColumn({ unsigned: true })
-	public privateId: number;
-
-	@Column({
-		unique: true,
-		type: 'uuid',
-	})
+	@PrimaryColumn({ type: 'uuid' })
 	public id: string;
 
 	@Column()
@@ -26,5 +20,12 @@ export class PostEntity {
 			eager: true,
 		},
 	)
-	author: UserEntity;
+	public author: UserEntity;
+
+	@RelationId((post: PostEntity) => post.likes)
+	likeIds: string[];
+
+	@ManyToMany(() => UserEntity, (user) => user.likes, { onDelete: 'CASCADE' })
+	@JoinTable()
+	public likes: UserEntity[];
 }
