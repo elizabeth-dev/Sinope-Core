@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn, RelationId } from 'typeorm';
 import { PostEntity } from '../post/post.entity';
 import { ProfileEntity } from '../profile/profile.entity';
 
@@ -21,6 +21,9 @@ export class UserEntity {
 
 	@CreateDateColumn()
 	public created: Date;
+
+	@RelationId((user: UserEntity) => user.profiles)
+	profileIds: string[];
 
 	@ManyToMany(() => ProfileEntity, (profile) => profile.managers)
 	public profiles: ProfileEntity[];

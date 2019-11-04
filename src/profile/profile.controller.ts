@@ -1,4 +1,5 @@
 import {
+	BadRequestException,
 	Body,
 	Controller,
 	Delete,
@@ -125,6 +126,67 @@ export class ProfileController {
 			}
 
 			return this.profileService.removeManager(profile, manager);
+		}));
+	}
+
+	@Get(':id/followers')
+	public getFollowers(@Param('id') profileId: string): Observable<ProfileEntity[]> {
+		return this.profileService.getFollowers(profileId).pipe(tap((profile) => {
+			if (!profile) {
+				throw new NotFoundException();
+			}
+		}));
+	}
+
+	@Put(':id/followers/:follower')
+	@UseGuards(AuthGuard('jwt'))
+	public follow(
+		@Param('id') profileId: string,
+		@Param('follower') follower: string,
+		@User() user: UserEntity,
+	): Observable<void> {
+		if (user.profileIds.indexOf(follower) === -1) {
+			throw new ForbiddenException();
+		}
+
+		if (profileId === follower) {
+			throw new BadRequestException();
+		}
+
+		return this.profileService.get(profileId).pipe(mergeMap((profile) => {
+			if (!profile) {
+				throw new NotFoundException();
+			}
+
+			if (user.profileIds.indexOf(follower) === -1) {
+				throw new ForbiddenException();
+			}
+
+			return this.profileService.follow(profile, follower);
+		}));
+	}
+
+	@Delete(':id/followers/:follower')
+	@UseGuards(AuthGuard('jwt'))
+	public unfollow(
+		@Param('id') profileId: string,
+		@Param('follower') unfollower: string,
+		@User() user: UserEntity,
+	): Observable<void> {
+		if (user.profileIds.indexOf(unfollower) === -1) {
+			throw new ForbiddenException();
+		}
+
+		if (profileId === unfollower) {
+			throw new BadRequestException();
+		}
+
+		return this.profileService.get(profileId).pipe(mergeMap((profile) => {
+			if (!profile) {
+				throw new NotFoundException();
+			}
+
+			return this.profileService.unfollow(profile, unfollower);
 		}));
 	}
 }

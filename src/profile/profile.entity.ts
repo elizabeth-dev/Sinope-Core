@@ -28,4 +28,11 @@ export class ProfileEntity {
 
 	@ManyToMany(() => PostEntity, (post) => post.likes)
 	public likes: PostEntity[];
+
+	@ManyToMany(() => ProfileEntity, (profile) => profile.followers)
+	public following: ProfileEntity[];
+
+	@ManyToMany(() => ProfileEntity, (profile) => profile.following)
+	@JoinTable()
+	public followers: ProfileEntity[];
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { UserEntity } from '../user/user.entity';
@@ -69,4 +70,32 @@ export class ProfileService {
 			.remove(user));
 	}
 
+	public getFollowers(id: string): Observable<ProfileEntity[]> {
+		return from(this.profileRepo.findOne(
+			id,
+			{
+				relations: [ 'followers' ],
+			},
+		)).pipe(map((profile) => profile ? profile.followers : undefined));
+	}
+
+	public follow(
+		profile: string | ProfileEntity,
+		follower: string | ProfileEntity,
+	): Observable<void> {
+		return from(this.profileRepo.createQueryBuilder()
+			.relation(ProfileEntity, 'followers')
+			.of(profile)
+			.add(follower));
+	}
+
+	public unfollow(
+		profile: string | ProfileEntity,
+		unfollower: string | ProfileEntity,
+	): Observable<void> {
+		return from(this.profileRepo.createQueryBuilder()
+			.relation(ProfileEntity, 'followers')
+			.of(profile)
+			.remove(unfollower));
+	}
 }
