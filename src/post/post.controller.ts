@@ -85,23 +85,45 @@ export class PostController {
 
 	}
 
-	@Put(':id/likes')
+	@Put(':id/likes/:profileId')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('jwt'))
 	public like(
 		@Param('id') id: string,
-		@Profile() profile: string,
+		@Param('profileId') profileId: string,
+		@User() user: UserEntity,
 	): Observable<void> {
-		return this.postService.like(id, profile);
+		if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}
+
+		return this.postService.get(id).pipe(mergeMap((post) => {
+			if (!post) {
+				throw new NotFoundException();
+			}
+
+			return this.postService.like(id, profileId);
+		}));
 	}
 
-	@Delete(':id/likes')
+	@Delete(':id/likes/:profileId')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('jwt'))
 	public unLike(
 		@Param('id') id: string,
-		@Profile() profile: string,
+		@Param(':profileId') profileId: string,
+		@User() user: UserEntity,
 	): Observable<void> {
-		return this.postService.unLike(id, profile);
+		if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}
+
+		return this.postService.get(id).pipe(mergeMap((post) => {
+			if (!post) {
+				throw new NotFoundException();
+			}
+
+			return this.postService.unLike(id, profileId);
+		}));
 	}
 }
