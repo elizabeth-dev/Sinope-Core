@@ -17,6 +17,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { EMPTY, Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { UpdateResult } from 'typeorm';
+import { PostEntity } from '../post/post.entity';
 import { User } from '../shared/decorators/user.decorator';
 import { ParseProfilePipe } from '../shared/pipes/profile.pipe';
 import { UserEntity } from '../user/user.entity';
@@ -131,8 +132,8 @@ export class ProfileController {
 
 	@Get(':id/followers')
 	public getFollowers(@Param('id') profileId: string): Observable<ProfileEntity[]> {
-		return this.profileService.getFollowers(profileId).pipe(tap((profile) => {
-			if (!profile) {
+		return this.profileService.getFollowers(profileId).pipe(tap((followers) => {
+			if (!followers) {
 				throw new NotFoundException();
 			}
 		}));
@@ -187,6 +188,15 @@ export class ProfileController {
 			}
 
 			return this.profileService.unfollow(profile, unfollower);
+		}));
+	}
+
+	@Get(':id/posts')
+	public getPosts(@Param('id') profileId: string): Observable<PostEntity[]> {
+		return this.profileService.getPosts(profileId).pipe(tap((posts) => {
+			if (!posts) {
+				throw new NotFoundException();
+			}
 		}));
 	}
 }

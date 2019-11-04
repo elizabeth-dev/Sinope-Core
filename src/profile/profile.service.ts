@@ -4,6 +4,7 @@ import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import { PostEntity } from '../post/post.entity';
 import { UserEntity } from '../user/user.entity';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { ProfileEntity } from './profile.entity';
@@ -97,5 +98,14 @@ export class ProfileService {
 			.relation(ProfileEntity, 'followers')
 			.of(profile)
 			.remove(unfollower));
+	}
+
+	public getPosts(id: string): Observable<PostEntity[]> {
+		return from(this.profileRepo.findOne(
+			id,
+			{
+				relations: [ 'posts' ],
+			},
+		)).pipe(map((profile) => profile ? profile.posts : undefined));
 	}
 }
