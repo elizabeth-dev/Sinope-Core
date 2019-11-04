@@ -80,6 +80,15 @@ export class ProfileService {
 		)).pipe(map((profile) => profile ? profile.followers : undefined));
 	}
 
+	public getFollowing(id: string): Observable<ProfileEntity[]> {
+		return from(this.profileRepo.findOne(
+			id,
+			{
+				relations: [ 'following' ],
+			},
+		)).pipe(map((profile) => profile ? profile.following : undefined));
+	}
+
 	public follow(
 		profile: string | ProfileEntity,
 		follower: string | ProfileEntity,

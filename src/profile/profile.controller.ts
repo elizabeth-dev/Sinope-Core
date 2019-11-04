@@ -144,6 +144,15 @@ export class ProfileController {
 		}));
 	}
 
+	@Get(':id/following')
+	public getFollowing(@Param('id') profileId: string): Observable<ProfileEntity[]> {
+		return this.profileService.getFollowing(profileId).pipe(tap((following) => {
+			if (!following) {
+				throw new NotFoundException();
+			}
+		}));
+	}
+
 	@Put(':id/followers/:follower')
 	@UseGuards(AuthGuard('jwt'))
 	public follow(
@@ -217,5 +226,25 @@ export class ProfileController {
 		}
 
 		return this.profileService.get(profileId).pipe(mergeMap((profile) => this.postService.add(newPost, profile, user)));
+	}
+
+	@Get(':id/timeline')
+	@UseGuards(AuthGuard('jwt'))
+	public timeline(
+		@Param('id') profileId: string,
+		@User() user: UserEntity,
+	): Observable<PostEntity[]> {
+		if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}
+
+		return this.profileService.getFollowing(profileId)
+			.pipe(mergeMap((following) => {
+				if (following.length === 0) {
+					return [];
+				}
+
+				return this.postService.getByAuthor(following.map((profile) => profile.id));
+			}));
 	}
 }

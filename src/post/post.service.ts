@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { from, Observable } from 'rxjs';
 
-import { DeleteResult } from 'typeorm';
+import { DeleteResult, In } from 'typeorm';
 import { ProfileEntity } from '../profile/profile.entity';
 import { UserEntity } from '../user/user.entity';
 import { CreatePostDto } from './definitions/CreatePost.dto';
@@ -26,6 +26,15 @@ export class PostService {
 		}
 
 		return from(this.postRepo.findByIds(id));
+	}
+
+	public getByAuthor(author: string | string[]): Observable<PostEntity[]> {
+		return from(this.postRepo.find({
+			author: {
+				id: author
+					instanceof Array ? In(author) : author,
+			},
+		}));
 	}
 
 	public add(

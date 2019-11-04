@@ -27,7 +27,7 @@ export class PostEntity {
 	public authorUser: UserEntity;
 
 	@RelationId((post: PostEntity) => post.likes)
-	likeIds: string[];
+	public likeIds: string[];
 
 	@ManyToMany(() => ProfileEntity, (profile) => profile.likes, { onDelete: 'CASCADE' })
 	@JoinTable()
