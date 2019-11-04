@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProfileModule } from '../profile/profile.module';
 
 import { PostController } from './post.controller';
 import { PostRepository } from './post.repository';
 import { PostService } from './post.service';
 
 @Module({
-	imports: [ TypeOrmModule.forFeature([ PostRepository ]), ProfileModule ],
+	imports: [ TypeOrmModule.forFeature([ PostRepository ]) ],
 	providers: [ PostService ],
 	controllers: [ PostController ],
+	exports: [ PostService ],
 })
 export class PostModule {
 }

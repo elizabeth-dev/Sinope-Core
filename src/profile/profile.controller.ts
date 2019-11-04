@@ -17,7 +17,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { EMPTY, Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { UpdateResult } from 'typeorm';
+import { CreatePostDto } from '../post/definitions/CreatePost.dto';
 import { PostEntity } from '../post/post.entity';
+import { PostService } from '../post/post.service';
 import { User } from '../shared/decorators/user.decorator';
 import { ParseProfilePipe } from '../shared/pipes/profile.pipe';
 import { UserEntity } from '../user/user.entity';
@@ -29,7 +31,10 @@ import { ProfileService } from './profile.service';
 
 @Controller('profile')
 export class ProfileController {
-	constructor(private readonly profileService: ProfileService) {
+	constructor(
+		private readonly profileService: ProfileService,
+		private readonly postService: PostService,
+	) {
 	}
 
 	@Get(':id')
@@ -198,5 +203,19 @@ export class ProfileController {
 				throw new NotFoundException();
 			}
 		}));
+	}
+
+	@Post(':id/posts')
+	@UseGuards(AuthGuard('jwt'))
+	public addPost(
+		@Body() newPost: CreatePostDto,
+		@Param('id') profileId: string,
+		@User() user: UserEntity,
+	): Observable<PostEntity> {
+		if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}
+
+		return this.profileService.get(profileId).pipe(mergeMap((profile) => this.postService.add(newPost, profile, user)));
 	}
 }
