@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn, RelationId } from 'typeorm';
 import { PostEntity } from '../post/post.entity';
+import { QuestionEntity } from '../question/question.entity';
 import { UserEntity } from '../user/user.entity';
 
 @Entity()
@@ -35,4 +36,10 @@ export class ProfileEntity {
 	@ManyToMany(() => ProfileEntity, (profile) => profile.following)
 	@JoinTable()
 	public followers: ProfileEntity[];
+
+	@OneToMany(() => QuestionEntity, (question) => question.author)
+	public askedQuestions: QuestionEntity[];
+
+	@OneToMany(() => QuestionEntity, (question) => question.recipient)
+	public receivedQuestions: QuestionEntity[];
 }

@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { PostEntity } from '../post/post.entity';
+import { QuestionEntity } from '../question/question.entity';
 import { UserEntity } from '../user/user.entity';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { ProfileEntity } from './profile.entity';
@@ -116,5 +117,14 @@ export class ProfileService {
 				relations: [ 'posts' ],
 			},
 		)).pipe(map((profile) => profile ? profile.posts : undefined));
+	}
+
+	public getQuestions(id: string): Observable<QuestionEntity[]> {
+		return from(this.profileRepo.findOne(
+			id,
+			{
+				relations: [ 'receivedQuestions' ],
+			},
+		)).pipe(map((profile) => profile ? profile.receivedQuestions.filter((question) => !question.answerId) : undefined));
 	}
 }

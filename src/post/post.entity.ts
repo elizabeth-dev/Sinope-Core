@@ -1,5 +1,17 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryColumn, RelationId } from 'typeorm';
+import {
+	Column,
+	CreateDateColumn,
+	Entity,
+	JoinColumn,
+	JoinTable,
+	ManyToMany,
+	ManyToOne,
+	OneToOne,
+	PrimaryColumn,
+	RelationId,
+} from 'typeorm';
 import { ProfileEntity } from '../profile/profile.entity';
+import { QuestionEntity } from '../question/question.entity';
 import { UserEntity } from '../user/user.entity';
 
 @Entity()
@@ -32,4 +44,7 @@ export class PostEntity {
 	@ManyToMany(() => ProfileEntity, (profile) => profile.likes, { onDelete: 'CASCADE' })
 	@JoinTable()
 	public likes: ProfileEntity[];
+
+	@OneToOne(() => QuestionEntity, (question) => question.answer, { eager: true })
+	public question?: QuestionEntity;
 }

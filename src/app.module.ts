@@ -9,6 +9,7 @@ import { CryptoModule } from './crypto/crypto.module';
 import { PostModule } from './post/post.module';
 import { ProfileModule } from './profile/profile.module';
 import { UserModule } from './user/user.module';
+import { QuestionModule } from './question/question.module';
 
 @Module({
 	imports: [
@@ -25,7 +26,7 @@ import { UserModule } from './user/user.module';
 				}
 			),
 			inject: [ ConfigService ],
-		}), AuthModule, UserModule, PostModule, ConfigModule, CryptoModule, ProfileModule,
+		}), AuthModule, UserModule, PostModule, ConfigModule, CryptoModule, ProfileModule, QuestionModule,
 	],
 	controllers: [ AppController ],
 	providers: [],

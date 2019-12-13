@@ -1,4 +1,4 @@
-import { IsString, IsUUID, Length } from 'class-validator';
+import { IsOptional, IsString, IsUUID, Length } from 'class-validator';
 
 export class CreatePostDto {
 	@IsUUID()
@@ -7,4 +7,8 @@ export class CreatePostDto {
 	@IsString()
 	@Length(1, 280)
 	content: string;
+
+	@IsOptional()
+	@IsUUID()
+	question?: string;
 }

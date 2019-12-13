@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryColumn, RelationId } from 'typeorm';
 import { PostEntity } from '../post/post.entity';
 import { ProfileEntity } from '../profile/profile.entity';
+import { QuestionEntity } from '../question/question.entity';
 
 @Entity()
 export class UserEntity {
@@ -30,4 +31,7 @@ export class UserEntity {
 
 	@OneToMany(() => PostEntity, (post) => post.authorUser)
 	public posts: PostEntity[];
+
+	@OneToMany(() => QuestionEntity, (question) => question.authorUser)
+	public askedQuestions: QuestionEntity[];
 }

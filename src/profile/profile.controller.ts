@@ -14,12 +14,15 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { EMPTY, Observable } from 'rxjs';
+import { combineLatest, EMPTY, Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { UpdateResult } from 'typeorm';
 import { CreatePostDto } from '../post/definitions/CreatePost.dto';
 import { PostEntity } from '../post/post.entity';
 import { PostService } from '../post/post.service';
+import { CreateQuestionDto } from '../question/definitions/CreateQuestion.dto';
+import { QuestionEntity } from '../question/question.entity';
+import { QuestionService } from '../question/question.service';
 import { User } from '../shared/decorators/user.decorator';
 import { ParseProfilePipe } from '../shared/pipes/profile.pipe';
 import { UserEntity } from '../user/user.entity';
@@ -34,6 +37,7 @@ export class ProfileController {
 	constructor(
 		private readonly profileService: ProfileService,
 		private readonly postService: PostService,
+		private readonly questionService: QuestionService,
 	) {
 	}
 
@@ -214,6 +218,24 @@ export class ProfileController {
 		}));
 	}
 
+	@Get(':id/posts/messages')
+	public getPostedMessages(@Param('id') profileId: string): Observable<PostEntity[]> {
+		return this.postService.getMessages(profileId).pipe(tap((posts) => {
+			if (!posts) {
+				throw new NotFoundException();
+			}
+		}));
+	}
+
+	@Get(':id/posts/questions')
+	public getPostedQuestions(@Param('id') profileId: string): Observable<PostEntity[]> {
+		return this.postService.getQuestions(profileId).pipe(tap((posts) => {
+			if (!posts) {
+				throw new NotFoundException();
+			}
+		}));
+	}
+
 	@Post(':id/posts')
 	@UseGuards(AuthGuard('jwt'))
 	public addPost(
@@ -226,6 +248,34 @@ export class ProfileController {
 		}
 
 		return this.profileService.get(profileId).pipe(mergeMap((profile) => this.postService.add(newPost, profile, user)));
+	}
+
+	@Get(':id/questions')
+	@UseGuards(AuthGuard('jwt'))
+	public getReceivedQuestions(
+		@Param('id') profileId: string,
+		@User() user: UserEntity,
+	): Observable<QuestionEntity[]> {
+		if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}
+
+		return this.profileService.getQuestions(profileId).pipe(tap((questions) => {
+			if (!questions) {
+				throw new NotFoundException();
+			}
+		}));
+	}
+
+	@Post(':id/questions')
+	@UseGuards(AuthGuard('jwt'))
+	public sendQuestion(
+		@Body() newQuestion: CreateQuestionDto,
+		@Param('id') profileId: string,
+		@User() user: UserEntity,
+	): Observable<QuestionEntity> {
+		return combineLatest([ this.profileService.get(profileId), this.profileService.get(newQuestion.author)])
+			.pipe(mergeMap(([ recipient, author ]) => this.questionService.add(newQuestion, author, user, recipient)));
 	}
 
 	@Get(':id/timeline')
