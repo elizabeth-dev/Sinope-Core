@@ -1,3 +1,5 @@
-export interface LoginResponse {
-	token: string;
+export interface TokenPair {
+	jwt: string;
+	refreshToken: string;
+	expiresAt: number;
 }

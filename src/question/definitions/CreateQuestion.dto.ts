@@ -1,9 +1,6 @@
-import { IsBoolean, IsString, IsUUID, Length } from 'class-validator';
+import { IsBoolean, IsMongoId, IsString, Length } from 'class-validator';
 
 export class CreateQuestionDto {
-	@IsUUID()
-	id: string;
-
 	@IsString()
 	@Length(1, 280)
 	content: string;
@@ -11,6 +8,9 @@ export class CreateQuestionDto {
 	@IsBoolean()
 	anonymous: boolean;
 
-	@IsUUID()
-	author: string;
+	@IsMongoId()
+	profile: string;
+
+	@IsMongoId()
+	recipient: string;
 }

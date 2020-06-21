@@ -4,13 +4,9 @@ export interface AuthConfig {
 }
 
 export interface DbConfig {
-	host: string;
-	port: number;
-	username: string;
-	password: string;
-	database: string;
-	logging: boolean;
-	entityPrefix: string;
-	dropSchema: boolean;
-	synchronize: boolean;
+	uri: string;
+	user: string;
+	pass: string;
+	autoIndex: boolean;
+	family: 4 | 6;
 }

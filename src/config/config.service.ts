@@ -1,6 +1,5 @@
 import * as Joi from '@hapi/joi';
 import { Injectable } from '@nestjs/common';
-
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { AuthConfig, DbConfig } from './config.interface';
@@ -28,19 +27,17 @@ export class ConfigService {
 			AUTH_SALT_ROUNDS: Joi.number().required(),
 			AUTH_PRIVATE_KEY: Joi.string().required(),
 			AUTH_JWT_DURATION: Joi.number().default(3600),
-			DB_HOST: Joi.string().required(),
-			DB_PORT: Joi.number().default(3306),
-			DB_USERNAME: Joi.string().required(),
-			DB_PASSWORD: Joi.string().required(),
-			DB_DATABASE: Joi.string().required(),
-			DB_LOGGING: Joi.boolean().default(false),
-			DB_ENTITY_PREFIX: Joi.string().default(''),
-			DB_DROP_SCHEMA: Joi.boolean().default(false),
-			DB_SYNC: Joi.boolean().default(false),
+			DB_URI: Joi.string().required(),
+			DB_USERNAME: Joi.string().required().allow(''),
+			DB_PASSWORD: Joi.string().required().allow(''),
+			DB_AUTOINDEX: Joi.boolean().default(true),
+			DB_IPFAMILY: Joi.number().valid(4, 6).default(4),
 			VERSION: Joi.string().required(),
 		});
 
-		const { error, value: validatedEnvConfig } = envVarsSchema.validate(envConfig);
+		const { error, value: validatedEnvConfig } = envVarsSchema.validate(
+			envConfig,
+		);
 		if (error) {
 			throw new Error(`Config validation error: ${error.message}`);
 		}
@@ -49,15 +46,11 @@ export class ConfigService {
 
 	public get dbConfig(): DbConfig {
 		return {
-			host: this.envConfig.DB_HOST,
-			port: Number(this.envConfig.DB_PORT),
-			username: this.envConfig.DB_USERNAME,
-			password: this.envConfig.DB_PASSWORD,
-			database: this.envConfig.DB_DATABASE,
-			logging: Boolean(this.envConfig.DB_LOGGING),
-			entityPrefix: this.envConfig.DB_ENTITY_PREFIX,
-			dropSchema: Boolean(this.envConfig.DB_DROP_SCHEMA),
-			synchronize: Boolean(this.envConfig.DB_SYNC),
+			uri: this.envConfig.DB_URI,
+			user: this.envConfig.DB_USERNAME,
+			pass: this.envConfig.DB_PASSWORD,
+			autoIndex: Boolean(this.envConfig.DB_AUTOINDEX),
+			family: Number(this.envConfig.DB_IPFAMILY) as 4 | 6,
 		};
 	}
 
@@ -72,7 +65,7 @@ export class ConfigService {
 		return { saltRounds: Number(this.envConfig.AUTH_SALT_ROUNDS) };
 	}
 
-	public get appConfig(): { port: number, corsOrigin: string | true } {
+	public get appConfig(): { port: number; corsOrigin: string | true } {
 		return {
 			port: Number(this.envConfig.PORT),
 			corsOrigin: this.envConfig.CORS_ORIGIN,

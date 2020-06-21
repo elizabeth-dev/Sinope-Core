@@ -1,14 +1,11 @@
-import { IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { IsMongoId, IsOptional, IsString, Length } from 'class-validator';
 
 export class CreatePostDto {
-	@IsUUID()
-	id: string;
-
 	@IsString()
 	@Length(1, 280)
 	content: string;
 
 	@IsOptional()
-	@IsUUID()
+	@IsMongoId()
 	question?: string;
 }

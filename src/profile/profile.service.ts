@@ -1,130 +1,152 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { from, Observable } from 'rxjs';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types, UpdateQuery } from 'mongoose';
+import { combineLatest, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { PostEntity } from '../post/post.entity';
-import { QuestionEntity } from '../question/question.entity';
-import { UserEntity } from '../user/user.entity';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
-import { ProfileEntity } from './profile.entity';
+import { Profile } from './profile.schema';
 
 @Injectable()
 export class ProfileService {
-	constructor(@InjectRepository(ProfileEntity) private readonly profileRepo: Repository<ProfileEntity>) {
-	}
+	constructor(
+		@InjectModel(Profile.name)
+		private readonly profileModel: Model<Profile>,
+	) {}
 
-	public get(id: string): Observable<ProfileEntity>;
-	public get(id?: string[]): Observable<ProfileEntity[]>;
-	public get(id?: string | string[]): Observable<ProfileEntity | ProfileEntity[]> {
+	public get(): Observable<Profile[]>;
+	public get(id: string): Observable<Profile>;
+	public get(id?: string): Observable<Profile | Profile[]> {
 		if (!id) {
-			return from(this.profileRepo.find());
+			return from(this.profileModel.find().exec());
 		}
 
-		if (typeof id === 'string') {
-			return from(this.profileRepo.findOne(id));
-		}
-
-		return from(this.profileRepo.findByIds(id));
+		return from(this.profileModel.findById(id).exec());
 	}
 
 	public create(
 		newProfile: CreateProfileDto,
-		manager: UserEntity,
-	): Observable<ProfileEntity> {
-		const profile = this.profileRepo.create({
-			...newProfile,
-			managers: [ manager ],
-		});
-
-		return from(this.profileRepo.save(profile));
+		manager: string,
+	): Observable<Profile> {
+		return from(
+			this.profileModel.create({
+				...newProfile,
+				managers: [Types.ObjectId(manager)],
+				following: [],
+				followers: [],
+			}),
+		);
 	}
 
-	public delete(id: string): Observable<DeleteResult> {
-		return from(this.profileRepo.delete(id));
+	public delete(id: string): Observable<void> {
+		return from(this.profileModel.deleteOne({ _id: id }).exec()).pipe(
+			map(() => {
+				return;
+			}),
+		);
 	}
 
 	public update(
 		id: string,
-		partial: QueryDeepPartialEntity<ProfileEntity>,
-	): Observable<UpdateResult> {
-		return from(this.profileRepo.update(id, partial));
+		partial: UpdateQuery<Profile>,
+	): Observable<Profile> {
+		return from(this.profileModel.findByIdAndUpdate(id, partial));
 	}
 
-	public addManager(
-		profile: string | ProfileEntity,
-		user: string | UserEntity,
-	): Observable<void> {
-		return from(this.profileRepo.createQueryBuilder()
-			.relation(ProfileEntity, 'managers')
-			.of(profile)
-			.add(user));
+	public addManager(id: string, manager: string): Observable<void> {
+		return from(
+			this.profileModel
+				.updateOne(
+					{ _id: id },
+					{
+						$push: { managers: Types.ObjectId(manager) },
+					},
+				)
+				.exec(),
+		);
 	}
 
-	public removeManager(
-		profile: string | ProfileEntity,
-		user: string | UserEntity,
-	): Observable<void> {
-		return from(this.profileRepo.createQueryBuilder()
-			.relation(ProfileEntity, 'managers')
-			.of(profile)
-			.remove(user));
+	public removeManager(id: string, exManager: string): Observable<void> {
+		return from(
+			this.profileModel
+				.updateOne(
+					{ _id: id },
+					{
+						$pull: { managers: Types.ObjectId(exManager) },
+					},
+				)
+				.exec(),
+		);
 	}
 
-	public getFollowers(id: string): Observable<ProfileEntity[]> {
-		return from(this.profileRepo.findOne(
-			id,
-			{
-				relations: [ 'followers' ],
-			},
-		)).pipe(map((profile) => profile ? profile.followers : undefined));
+	public getFollowers(id: string): Observable<Profile[]> {
+		return from(
+			this.profileModel.findById(id).populate('followers').exec(),
+		).pipe(
+			map(
+				(profile: Profile & { followers: Profile[] }) =>
+					profile.followers,
+			),
+		);
 	}
 
-	public getFollowing(id: string): Observable<ProfileEntity[]> {
-		return from(this.profileRepo.findOne(
-			id,
-			{
-				relations: [ 'following' ],
-			},
-		)).pipe(map((profile) => profile ? profile.following : undefined));
+	public getFollowing(id: string): Observable<Profile[]> {
+		return from(
+			this.profileModel.findById(id).populate('following').exec(),
+		).pipe(
+			map(
+				(profile: Profile & { following: Profile[] }) =>
+					profile.following,
+			),
+		);
 	}
 
-	public follow(
-		profile: string | ProfileEntity,
-		follower: string | ProfileEntity,
-	): Observable<void> {
-		return from(this.profileRepo.createQueryBuilder()
-			.relation(ProfileEntity, 'followers')
-			.of(profile)
-			.add(follower));
+	public getFollowingIds(id: string): Observable<string[]> {
+		return from(this.profileModel.findById(id).exec()).pipe(
+			map((profile: Profile) =>
+				profile.following.map((follow) => follow.toHexString()),
+			),
+		);
 	}
 
-	public unfollow(
-		profile: string | ProfileEntity,
-		unfollower: string | ProfileEntity,
-	): Observable<void> {
-		return from(this.profileRepo.createQueryBuilder()
-			.relation(ProfileEntity, 'followers')
-			.of(profile)
-			.remove(unfollower));
+	public follow(id: string, follower: string): Observable<void> {
+		return combineLatest(
+			from(
+				this.profileModel.updateOne(
+					{ _id: id },
+					{ $push: { followers: Types.ObjectId(follower) } },
+				),
+			),
+			from(
+				this.profileModel.updateOne(
+					{ _id: follower },
+					{ $push: { following: Types.ObjectId(id) } },
+				),
+			),
+		).pipe(
+			map(() => {
+				return;
+			}),
+		);
 	}
 
-	public getPosts(id: string): Observable<PostEntity[]> {
-		return from(this.profileRepo.findOne(
-			id,
-			{
-				relations: [ 'posts' ],
-			},
-		)).pipe(map((profile) => profile ? profile.posts : undefined));
-	}
-
-	public getQuestions(id: string): Observable<QuestionEntity[]> {
-		return from(this.profileRepo.findOne(
-			id,
-			{
-				relations: [ 'receivedQuestions' ],
-			},
-		)).pipe(map((profile) => profile ? profile.receivedQuestions.filter((question) => !question.answerId) : undefined));
+	public unfollow(id: string, unfollower: string): Observable<void> {
+		return combineLatest(
+			from(
+				this.profileModel.updateOne(
+					{ _id: id },
+					{ $pull: { followers: Types.ObjectId(unfollower) } },
+				),
+			),
+			from(
+				this.profileModel.updateOne(
+					{ _id: unfollower },
+					{ $pull: { following: Types.ObjectId(id) } },
+				),
+			),
+		).pipe(
+			map(() => {
+				return;
+			}),
+		);
 	}
 }

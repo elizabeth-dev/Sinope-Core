@@ -3,7 +3,6 @@ import {
 	Body,
 	Controller,
 	Delete,
-	ForbiddenException,
 	Get,
 	HttpCode,
 	NotFoundException,
@@ -13,23 +12,19 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-
-import { combineLatest, EMPTY, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
-import { UpdateResult } from 'typeorm';
+import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { CreatePostDto } from '../post/definitions/CreatePost.dto';
-import { PostEntity } from '../post/post.entity';
+import { PostEntity } from '../post/post.schema';
 import { PostService } from '../post/post.service';
 import { CreateQuestionDto } from '../question/definitions/CreateQuestion.dto';
-import { QuestionEntity } from '../question/question.entity';
+import { Question } from '../question/question.schema';
 import { QuestionService } from '../question/question.service';
-import { User } from '../shared/decorators/user.decorator';
-import { ParseProfilePipe } from '../shared/pipes/profile.pipe';
-import { UserEntity } from '../user/user.entity';
+import { ReqUser } from '../shared/decorators/user.decorator';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { UpdateProfileDto } from './definitions/UpdateProfile.dto';
-
-import { ProfileEntity } from './profile.entity';
+import { Profile } from './profile.schema';
 import { ProfileService } from './profile.service';
 
 @Controller('profile')
@@ -38,263 +33,217 @@ export class ProfileController {
 		private readonly profileService: ProfileService,
 		private readonly postService: PostService,
 		private readonly questionService: QuestionService,
-	) {
-	}
+	) {}
 
 	@Get(':id')
-	public get(@Param('id') id: string): Observable<ProfileEntity> {
-		return this.profileService.get(id).pipe(tap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
-		}));
+	public get(@Param('id') id: string): Observable<Profile> {
+		return this.profileService.get(id).pipe(
+			tap((profile) => {
+				if (!profile) {
+					throw new NotFoundException();
+				}
+			}),
+		);
 	}
 
 	@Post()
 	@UseGuards(AuthGuard('jwt'))
 	public create(
 		@Body() newProfile: CreateProfileDto,
-		@User() user: UserEntity,
-	): Observable<ProfileEntity> {
-		return this.profileService.create(newProfile, user);
+		@ReqUser() user: JwtPayload,
+	): Observable<Profile> {
+		return this.profileService.create(newProfile, user.sub);
 	}
 
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('jwt'))
-	public delete(
-		@Param('id') id: string,
-		@User() user: UserEntity,
-	): Observable<void> {
-		return this.profileService.get(id).pipe(mergeMap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
+	public delete(@Param('id') id: string): Observable<void> {
+		return this.profileService.get(id).pipe(
+			mergeMap((profile) => {
+				if (!profile) {
+					throw new NotFoundException();
+				}
 
-			if (profile.managerIds.indexOf(user.id) === -1) {
-				throw new ForbiddenException();
-			}
+				/*if (profile.managerIds.indexOf(user.id) === -1) {
+					throw new ForbiddenException();
+				}*/
 
-			return this.profileService.delete(id).pipe(mergeMap(() => EMPTY));
-		}));
+				return this.profileService.delete(id);
+			}),
+		);
 	}
 
 	@Put(':id')
 	@UseGuards(AuthGuard('jwt'))
 	public update(
-		@Param('id', ParseProfilePipe) profile$: Observable<ProfileEntity>,
+		@Param('id') profile: string,
 		@Body() partial: UpdateProfileDto,
-		@User() user: UserEntity,
-	): Observable<UpdateResult> {
-		return profile$.pipe(mergeMap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
-
-			if (profile.managerIds.indexOf(user.id) === -1) {
-				throw new ForbiddenException();
-			}
-
-			return this.profileService.update(profile.id, partial);
-		}));
+	): Observable<Profile> {
+		return this.profileService.update(profile, partial);
 	}
 
 	@Put(':id/managers/:userId')
 	@UseGuards(AuthGuard('jwt'))
 	public addManager(
-		@Param('id', ParseProfilePipe) profile$: Observable<ProfileEntity>,
+		@Param('id') profile: string,
 		@Param('userId') manager: string,
-		@User() user: UserEntity,
 	): Observable<void> {
-		return profile$.pipe(mergeMap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
-
-			if (profile.managerIds.indexOf(user.id) === -1) {
-				throw new ForbiddenException();
-			}
-
-			return this.profileService.addManager(profile, manager);
-		}));
+		return this.profileService.addManager(profile, manager);
 	}
 
 	@Delete(':id/managers/:userId')
 	@UseGuards(AuthGuard('jwt'))
 	public removeManager(
-		@Param('id', ParseProfilePipe) profile$: Observable<ProfileEntity>,
+		@Param('id') profile: string,
 		@Param('userId') manager: string,
-		@User() user: UserEntity,
 	): Observable<void> {
-		return profile$.pipe(mergeMap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
-
-			if (profile.managerIds.indexOf(user.id) === -1) {
-				throw new ForbiddenException();
-			}
-
-			return this.profileService.removeManager(profile, manager);
-		}));
+		return this.profileService.removeManager(profile, manager);
 	}
 
 	@Get(':id/followers')
-	public getFollowers(@Param('id') profileId: string): Observable<ProfileEntity[]> {
-		return this.profileService.getFollowers(profileId).pipe(tap((followers) => {
-			if (!followers) {
-				throw new NotFoundException();
-			}
-		}));
+	public getFollowers(@Param('id') profileId: string): Observable<Profile[]> {
+		return this.profileService.getFollowers(profileId).pipe(
+			tap((followers) => {
+				if (!followers) {
+					throw new NotFoundException();
+				}
+			}),
+		);
 	}
 
 	@Get(':id/following')
-	public getFollowing(@Param('id') profileId: string): Observable<ProfileEntity[]> {
-		return this.profileService.getFollowing(profileId).pipe(tap((following) => {
-			if (!following) {
-				throw new NotFoundException();
-			}
-		}));
+	public getFollowing(@Param('id') profileId: string): Observable<Profile[]> {
+		return this.profileService.getFollowing(profileId).pipe(
+			tap((following) => {
+				if (!following) {
+					throw new NotFoundException();
+				}
+			}),
+		);
 	}
 
 	@Put(':id/followers/:follower')
 	@UseGuards(AuthGuard('jwt'))
 	public follow(
-		@Param('id') profileId: string,
+		@Param('id') profile: string,
 		@Param('follower') follower: string,
-		@User() user: UserEntity,
 	): Observable<void> {
-		if (user.profileIds.indexOf(follower) === -1) {
+		/*if (user.profileIds.indexOf(follower) === -1) {
 			throw new ForbiddenException();
-		}
+		}*/
 
-		if (profileId === follower) {
+		if (profile === follower) {
 			throw new BadRequestException();
 		}
 
-		return this.profileService.get(profileId).pipe(mergeMap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
-
-			if (user.profileIds.indexOf(follower) === -1) {
-				throw new ForbiddenException();
-			}
-
-			return this.profileService.follow(profile, follower);
-		}));
+		return this.profileService.follow(profile, follower);
 	}
 
 	@Delete(':id/followers/:follower')
 	@UseGuards(AuthGuard('jwt'))
 	public unfollow(
-		@Param('id') profileId: string,
+		@Param('id') profile: string,
 		@Param('follower') unfollower: string,
-		@User() user: UserEntity,
 	): Observable<void> {
-		if (user.profileIds.indexOf(unfollower) === -1) {
+		/*if (user.profileIds.indexOf(unfollower) === -1) {
 			throw new ForbiddenException();
-		}
+		}*/
 
-		if (profileId === unfollower) {
+		if (profile === unfollower) {
 			throw new BadRequestException();
 		}
 
-		return this.profileService.get(profileId).pipe(mergeMap((profile) => {
-			if (!profile) {
-				throw new NotFoundException();
-			}
-
-			return this.profileService.unfollow(profile, unfollower);
-		}));
+		return this.profileService.unfollow(profile, unfollower);
 	}
 
 	@Get(':id/posts')
 	public getPosts(@Param('id') profileId: string): Observable<PostEntity[]> {
-		return this.profileService.getPosts(profileId).pipe(tap((posts) => {
-			if (!posts) {
-				throw new NotFoundException();
-			}
-		}));
+		return this.postService.getByProfile(profileId).pipe(
+			tap((posts) => {
+				if (!posts) {
+					throw new NotFoundException();
+				}
+			}),
+		);
 	}
 
 	@Get(':id/posts/messages')
-	public getPostedMessages(@Param('id') profileId: string): Observable<PostEntity[]> {
-		return this.postService.getMessages(profileId).pipe(tap((posts) => {
-			if (!posts) {
-				throw new NotFoundException();
-			}
-		}));
+	public getPostedMessages(
+		@Param('id') profileId: string,
+	): Observable<PostEntity[]> {
+		return this.postService.getMessages(profileId).pipe(
+			tap((posts) => {
+				if (!posts) {
+					throw new NotFoundException();
+				}
+			}),
+		);
 	}
 
 	@Get(':id/posts/questions')
-	public getPostedQuestions(@Param('id') profileId: string): Observable<PostEntity[]> {
-		return this.postService.getQuestions(profileId).pipe(tap((posts) => {
-			if (!posts) {
-				throw new NotFoundException();
-			}
-		}));
+	public getPostedQuestions(
+		@Param('id') profileId: string,
+	): Observable<PostEntity[]> {
+		return this.postService.getQuestions(profileId).pipe(
+			tap((posts) => {
+				if (!posts) {
+					throw new NotFoundException();
+				}
+			}),
+		);
 	}
 
 	@Post(':id/posts')
 	@UseGuards(AuthGuard('jwt'))
 	public addPost(
 		@Body() newPost: CreatePostDto,
-		@Param('id') profileId: string,
-		@User() user: UserEntity,
+		@Param('id') profile: string,
+		@ReqUser() user: JwtPayload,
 	): Observable<PostEntity> {
-		if (user.profileIds.indexOf(profileId) === -1) {
+		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();
-		}
+		}*/
 
-		return this.profileService.get(profileId).pipe(mergeMap((profile) => this.postService.add(newPost, profile, user)));
+		return this.postService.add(newPost, profile, user.sub);
 	}
 
 	@Get(':id/questions')
 	@UseGuards(AuthGuard('jwt'))
 	public getReceivedQuestions(
-		@Param('id') profileId: string,
-		@User() user: UserEntity,
-	): Observable<QuestionEntity[]> {
-		if (user.profileIds.indexOf(profileId) === -1) {
+		@Param('id') profile: string,
+	): Observable<Question[]> {
+		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();
-		}
+		}*/
 
-		return this.profileService.getQuestions(profileId).pipe(tap((questions) => {
-			if (!questions) {
-				throw new NotFoundException();
-			}
-		}));
+		return this.questionService.getByProfile(profile);
 	}
 
 	@Post(':id/questions')
 	@UseGuards(AuthGuard('jwt'))
 	public sendQuestion(
 		@Body() newQuestion: CreateQuestionDto,
-		@Param('id') profileId: string,
-		@User() user: UserEntity,
-	): Observable<QuestionEntity> {
-		return combineLatest([ this.profileService.get(profileId), this.profileService.get(newQuestion.author)])
-			.pipe(mergeMap(([ recipient, author ]) => this.questionService.add(newQuestion, author, user, recipient)));
+		@ReqUser() user: JwtPayload,
+	): Observable<Question> {
+		return this.questionService.add(newQuestion, user.sub);
 	}
 
 	@Get(':id/timeline')
 	@UseGuards(AuthGuard('jwt'))
-	public timeline(
-		@Param('id') profileId: string,
-		@User() user: UserEntity,
-	): Observable<PostEntity[]> {
-		if (user.profileIds.indexOf(profileId) === -1) {
+	public timeline(@Param('id') profileId: string): Observable<PostEntity[]> {
+		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();
-		}
+		}*/
 
-		return this.profileService.getFollowing(profileId)
-			.pipe(mergeMap((following) => {
-				if (following.length === 0) {
+		return this.profileService.getFollowingIds(profileId).pipe(
+			mergeMap((followingIds) => {
+				if (followingIds.length === 0) {
 					return [];
 				}
 
-				return this.postService.getByAuthor(following.map((profile) => profile.id));
-			}));
+				return this.postService.getByProfile(followingIds);
+			}),
+		);
 	}
 }

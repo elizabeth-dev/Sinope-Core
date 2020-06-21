@@ -1,48 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { from, Observable } from 'rxjs';
-import { DeleteResult, Repository } from 'typeorm';
-import { ProfileEntity } from '../profile/profile.entity';
-import { UserEntity } from '../user/user.entity';
+import { map } from 'rxjs/operators';
 import { CreateQuestionDto } from './definitions/CreateQuestion.dto';
-import { QuestionEntity } from './question.entity';
+import { Question } from './question.schema';
 
 @Injectable()
 export class QuestionService {
-	constructor(@InjectRepository(QuestionEntity) private readonly questionRepo: Repository<QuestionEntity>) {
+	constructor(
+		@InjectModel(Question.name)
+		private readonly questionModel: Model<Question>,
+	) {}
+
+	public get(): Observable<Question[]>;
+	public get(id: string): Observable<Question>;
+	public get(id?: string): Observable<Question | Question[]> {
+		if (!id) {
+			return from(this.questionModel.find().exec());
+		}
+
+		return from(this.questionModel.findById(id).exec());
 	}
 
-	public get(id: string): Observable<QuestionEntity>;
-	public get(id?: string[]): Observable<QuestionEntity[]>;
-	public get(id?: string | string[]): Observable<QuestionEntity | QuestionEntity[]> {
-		if (!id) {
-			return from(this.questionRepo.find());
-		}
-
-		if (typeof id === 'string') {
-			return from(this.questionRepo.findOne(id));
-		}
-
-		return from(this.questionRepo.findByIds(id));
+	public getByProfile(profile: string): Observable<Question[]> {
+		return from(this.questionModel.find({ profile }).exec);
 	}
 
 	public add(
-		newQuestion: CreateQuestionDto,
-		author: ProfileEntity,
-		authorUser: UserEntity,
-		recipient: ProfileEntity,
-	): Observable<QuestionEntity> {
-		const question = this.questionRepo.create({
-			...newQuestion,
-			author,
-			recipient,
-			authorUser,
-		});
-
-		return from(this.questionRepo.save(question));
+		{ profile, recipient, ...newQuestion }: CreateQuestionDto,
+		user: string,
+	): Observable<Question> {
+		return from(
+			this.questionModel.create({
+				...newQuestion,
+				user: Types.ObjectId(user),
+				profile: Types.ObjectId(profile),
+				recipient: Types.ObjectId(recipient),
+			}),
+		);
 	}
 
-	public delete(id: string): Observable<DeleteResult> {
-		return from(this.questionRepo.delete(id));
+	public delete(id: string): Observable<void> {
+		return from(this.questionModel.deleteOne({ _id: id })).pipe(
+			map(() => {
+				return;
+			}),
+		);
 	}
 }

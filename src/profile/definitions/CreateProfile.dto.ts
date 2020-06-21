@@ -1,9 +1,6 @@
-import { IsAlphanumeric, IsString, IsUUID, Length } from 'class-validator';
+import { IsAlphanumeric, IsOptional, IsString, Length } from 'class-validator';
 
 export class CreateProfileDto {
-	@IsUUID()
-	public id: string;
-
 	@IsAlphanumeric()
 	@Length(1, 16)
 	public tag: string;
@@ -11,4 +8,8 @@ export class CreateProfileDto {
 	@IsString()
 	@Length(1, 32)
 	public name: string;
+
+	@IsOptional()
+	@IsString()
+	public description: string;
 }

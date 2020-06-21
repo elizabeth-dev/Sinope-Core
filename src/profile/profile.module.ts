@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { PostModule } from '../post/post.module';
 import { QuestionModule } from '../question/question.module';
 import { ProfileController } from './profile.controller';
-import { ProfileEntity } from './profile.entity';
+import { Profile, ProfileSchema } from './profile.schema';
 import { ProfileService } from './profile.service';
 
 @Module({
-	imports: [ TypeOrmModule.forFeature([ ProfileEntity ]), PostModule, QuestionModule ],
-	providers: [ ProfileService ],
-	controllers: [ ProfileController ],
-	exports: [ ProfileService ],
+	imports: [
+		MongooseModule.forFeature([
+			{ name: Profile.name, schema: ProfileSchema },
+		]),
+		PostModule,
+		QuestionModule,
+	],
+	providers: [ProfileService],
+	controllers: [ProfileController],
+	exports: [ProfileService],
 })
-export class ProfileModule {
-}
+export class ProfileModule {}

@@ -1,18 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-
-import { EMPTY, Observable } from 'rxjs';
-import { map, mergeMap } from 'rxjs/operators';
-
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { from, Observable, of } from 'rxjs';
+import { ignoreElements, map, switchMap } from 'rxjs/operators';
+import { v4 as uuidv4 } from 'uuid';
 import { CryptoService } from '../crypto/crypto.service';
-
-import { UserEntity } from '../user/user.entity';
+import { User } from '../user/user.schema';
 import { UserService } from '../user/user.service';
-
-import { LoginRequest } from './definitions/LoginRequest.dto';
-
 import { JwtPayload } from './interfaces/jwt.interface';
-import { LoginResponse } from './interfaces/login.interface';
+import { TokenPair } from './interfaces/login.interface';
+import { RefreshToken } from './refresh-token.schema';
 
 @Injectable()
 export class AuthService {
@@ -20,47 +18,81 @@ export class AuthService {
 		private readonly userService: UserService,
 		private readonly jwtService: JwtService,
 		private readonly cryptoService: CryptoService,
-	) {
+		@InjectModel(RefreshToken.name)
+		private readonly tokenModel: Model<RefreshToken>,
+	) {}
+
+	public validateUser(
+		email: string,
+		password: string,
+	): Observable<User | null> {
+		return this.userService.getByEmail(email).pipe(
+			switchMap(({ password: userPass, ...user }) => {
+				if (!user) return of(null);
+
+				return this.cryptoService
+					.compareHash(password, userPass)
+					.pipe(map((correctPass) => (correctPass ? user : null)));
+			}),
+		);
 	}
 
-	public genToken(payload: JwtPayload): string {
-		// Generate a new JWT
+	public genJwt(payload: Omit<JwtPayload, 'exp'>): string {
 		return this.jwtService.sign(payload);
 	}
 
-	public validateUser(payload: JwtPayload): Observable<UserEntity> {
-		// Return user by its JWT sub field
-		return this.userService.get(payload.sub);
+	private genRefreshToken(user: Types.ObjectId): Observable<string> {
+		const refreshToken = uuidv4();
+		
+		return from(this.tokenModel.create({ refreshToken, user })).pipe(
+			map(({ refreshToken }) => refreshToken),
+		);
 	}
 
 	public setActivity(id: string): Observable<void> {
-		return this.userService.setActivity(id).pipe(mergeMap(() => EMPTY));
+		return this.userService.setActivity(id);
 	}
 
-	public login(loginData: LoginRequest): Observable<LoginResponse> {
-		return this.userService.getByEmail(loginData.email).pipe(mergeMap((user) => {
-			if (!user) {
-				throw new UnauthorizedException();
-			}
+	public refreshJwt(oldRefreshToken: string): Observable<TokenPair> {
+		const refreshToken = uuidv4();
 
-			return this.cryptoService.compareHash(
-				loginData.password,
-				user.password,
-			)
-				.pipe(map((result) => {
-					if (result) {
-						return {
-							token: this.genToken({
-								sub: user.id,
-								email: user.email,
-								name: user.name,
-							}),
-						};
-					}
-
+		return from(
+			this.tokenModel
+				.findOneAndUpdate(
+					{ refreshToken: oldRefreshToken },
+					{ refreshToken },
+				)
+				.populate('user')
+				.exec(),
+		).pipe(
+			map((tokenEntry: RefreshToken & { user: User }) => {
+				if (!tokenEntry || !tokenEntry.user)
 					throw new UnauthorizedException();
-				}));
-		}));
 
+				const { email, name, id: sub } = tokenEntry.user;
+
+				return {
+					refreshToken,
+					jwt: this.genJwt({ email, name, sub }),
+					expiresAt: Date.now() + 15 * 60,
+				};
+			}),
+		);
+	}
+
+	public login({ email, name, id: sub }: User): Observable<TokenPair> {
+		return this.genRefreshToken(Types.ObjectId(sub)).pipe(
+			map((refreshToken) => ({
+				refreshToken,
+				jwt: this.genJwt({ email, name, sub }),
+				expiresAt: Date.now() + 15 * 60,
+			})),
+		);
+	}
+
+	public logout(refreshToken: string): Observable<void> {
+		return from(this.tokenModel.deleteOne({ refreshToken }).exec()).pipe(
+			ignoreElements(),
+		);
 	}
 }

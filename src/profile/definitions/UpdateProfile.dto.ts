@@ -10,4 +10,8 @@ export class UpdateProfileDto {
 	@IsString()
 	@Length(1, 32)
 	public name: string;
+
+	@IsOptional()
+	@IsString()
+	public description: string;
 }

@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { MongooseModule } from '@nestjs/mongoose';
 import { PostController } from './post.controller';
-import { PostRepository } from './post.repository';
+import { PostEntitySchema } from './post.schema';
 import { PostService } from './post.service';
 
 @Module({
-	imports: [ TypeOrmModule.forFeature([ PostRepository ]) ],
-	providers: [ PostService ],
-	controllers: [ PostController ],
-	exports: [ PostService ],
+	imports: [
+		MongooseModule.forFeature([{ name: 'Post', schema: PostEntitySchema }]),
+	],
+	providers: [PostService],
+	controllers: [PostController],
+	exports: [PostService],
 })
-export class PostModule {
-}
+export class PostModule {}
