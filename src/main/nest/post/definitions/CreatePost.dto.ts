@@ -5,6 +5,9 @@ export class CreatePostDto {
 	@Length(1, 280)
 	content: string;
 
+	@IsMongoId()
+	profile: string;
+
 	@IsOptional()
 	@IsMongoId()
 	question?: string;

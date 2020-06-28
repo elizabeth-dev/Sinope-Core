@@ -9,9 +9,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RefreshTokenSchema, RefreshToken } from './refresh-token.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
-	providers: [AuthService, JwtStrategy],
+	providers: [AuthService, JwtStrategy, LocalStrategy],
 	imports: [
 		PassportModule.register({ defaultStrategy: 'jwt' }),
 		JwtModule.registerAsync({

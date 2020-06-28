@@ -14,25 +14,20 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
-import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
-import { CreatePostDto } from '../post/definitions/CreatePost.dto';
 import { PostEntity } from '../post/post.schema';
 import { PostService } from '../post/post.service';
-import { CreateQuestionDto } from '../question/definitions/CreateQuestion.dto';
-import { Question } from '../question/question.schema';
-import { QuestionService } from '../question/question.service';
 import { ReqUser } from '../shared/decorators/user.decorator';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { UpdateProfileDto } from './definitions/UpdateProfile.dto';
 import { Profile } from './profile.schema';
 import { ProfileService } from './profile.service';
+import { JwtPayload } from '../auth/interfaces/jwt.interface';
 
-@Controller('profile')
+@Controller('profiles')
 export class ProfileController {
 	constructor(
 		private readonly profileService: ProfileService,
 		private readonly postService: PostService,
-		private readonly questionService: QuestionService,
 	) {}
 
 	@Get(':id')
@@ -155,78 +150,6 @@ export class ProfileController {
 		}
 
 		return this.profileService.unfollow(profile, unfollower);
-	}
-
-	@Get(':id/posts')
-	public getPosts(@Param('id') profileId: string): Observable<PostEntity[]> {
-		return this.postService.getByProfile(profileId).pipe(
-			tap((posts) => {
-				if (!posts) {
-					throw new NotFoundException();
-				}
-			}),
-		);
-	}
-
-	@Get(':id/posts/messages')
-	public getPostedMessages(
-		@Param('id') profileId: string,
-	): Observable<PostEntity[]> {
-		return this.postService.getMessages(profileId).pipe(
-			tap((posts) => {
-				if (!posts) {
-					throw new NotFoundException();
-				}
-			}),
-		);
-	}
-
-	@Get(':id/posts/questions')
-	public getPostedQuestions(
-		@Param('id') profileId: string,
-	): Observable<PostEntity[]> {
-		return this.postService.getQuestions(profileId).pipe(
-			tap((posts) => {
-				if (!posts) {
-					throw new NotFoundException();
-				}
-			}),
-		);
-	}
-
-	@Post(':id/posts')
-	@UseGuards(AuthGuard('jwt'))
-	public addPost(
-		@Body() newPost: CreatePostDto,
-		@Param('id') profile: string,
-		@ReqUser() user: JwtPayload,
-	): Observable<PostEntity> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
-
-		return this.postService.add(newPost, profile, user.sub);
-	}
-
-	@Get(':id/questions')
-	@UseGuards(AuthGuard('jwt'))
-	public getReceivedQuestions(
-		@Param('id') profile: string,
-	): Observable<Question[]> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
-
-		return this.questionService.getByProfile(profile);
-	}
-
-	@Post(':id/questions')
-	@UseGuards(AuthGuard('jwt'))
-	public sendQuestion(
-		@Body() newQuestion: CreateQuestionDto,
-		@ReqUser() user: JwtPayload,
-	): Observable<Question> {
-		return this.questionService.add(newQuestion, user.sub);
 	}
 
 	@Get(':id/timeline')

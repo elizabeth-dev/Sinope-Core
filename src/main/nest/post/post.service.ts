@@ -31,8 +31,7 @@ export class PostService {
 	}
 
 	public add(
-		{ question, ...newPost }: CreatePostDto,
-		profile: string,
+		{ question, profile, ...newPost }: CreatePostDto,
 		user: string,
 	): Observable<PostEntity> {
 		return from(

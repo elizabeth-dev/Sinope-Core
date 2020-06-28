@@ -10,7 +10,7 @@ export class Question extends Document {
 	public anonymous: boolean;
 
 	@Prop({ ref: 'Profile' })
-	public profile: Types.ObjectId;
+	public profile?: Types.ObjectId;
 
 	@Prop({ ref: 'User' })
 	public user: Types.ObjectId;

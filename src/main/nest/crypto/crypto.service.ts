@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { from, Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 

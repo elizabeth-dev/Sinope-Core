@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
-import { User } from 'src/user/user.schema';
 import { AuthService } from './auth.service';
 import { TokenPair } from './interfaces/login.interface';
+import { User } from '../user/user.schema';
 
 @Controller('auth')
 export class AuthController {

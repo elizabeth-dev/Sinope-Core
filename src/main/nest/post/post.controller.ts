@@ -7,16 +7,59 @@ import {
 	Param,
 	Put,
 	UseGuards,
+	Query,
+	BadRequestException,
+	Post,
+	Body,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { PostEntity } from './post.schema';
 import { PostService } from './post.service';
+import { CreatePostDto } from './definitions/CreatePost.dto';
+import { JwtPayload } from '../auth/interfaces/jwt.interface';
+import { ReqUser } from '../shared/decorators/user.decorator';
 
-@Controller('post')
+@Controller('posts')
 export class PostController {
 	constructor(private readonly postService: PostService) {}
+
+	@Get('')
+	public getPostsByProfile(
+		@Query('profile') profile: string,
+		@Query('type') type: string,
+	): Observable<PostEntity[]> {
+		if (!profile) throw new BadRequestException();
+
+		if (type) {
+			if (type === 'message')
+				return this.postService.getMessages(profile);
+			if (type === 'question')
+				return this.postService.getQuestions(profile);
+		}
+
+		return this.postService.getByProfile(profile).pipe(
+			tap((posts) => {
+				if (!posts) {
+					throw new NotFoundException();
+				}
+			}),
+		);
+	}
+
+	@Post('')
+	@UseGuards(AuthGuard('jwt'))
+	public addPost(
+		@Body() newPost: CreatePostDto,
+		@ReqUser() user: JwtPayload,
+	): Observable<PostEntity> {
+		/*if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}*/
+
+		return this.postService.add(newPost, user.sub);
+	}
 
 	@Get(':id')
 	public getById(@Param('id') id: string): Observable<PostEntity> {

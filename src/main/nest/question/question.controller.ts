@@ -6,16 +6,46 @@ import {
 	NotFoundException,
 	Param,
 	UseGuards,
+	Query,
+	Post,
+	Body,
+	BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { Question } from './question.schema';
 import { QuestionService } from './question.service';
+import { CreateQuestionDto } from './definitions/CreateQuestion.dto';
+import { JwtPayload } from '../auth/interfaces/jwt.interface';
+import { ReqUser } from '../shared/decorators/user.decorator';
 
-@Controller('question')
+@Controller('questions')
 export class QuestionController {
 	constructor(private readonly questionService: QuestionService) {}
+
+	@Get('')
+	@UseGuards(AuthGuard('jwt'))
+	public getReceivedQuestions(
+		@Query('profile') profile: string,
+	): Observable<Question[]> {
+		if (!profile) throw new BadRequestException();
+
+		/*if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}*/
+
+		return this.questionService.getByProfile(profile);
+	}
+
+	@Post('')
+	@UseGuards(AuthGuard('jwt'))
+	public sendQuestion(
+		@Body() newQuestion: CreateQuestionDto,
+		@ReqUser() user: JwtPayload,
+	): Observable<Question> {
+		return this.questionService.add(newQuestion, user.sub);
+	}
 
 	@Get(':id')
 	@UseGuards(AuthGuard('jwt'))

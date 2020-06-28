@@ -26,7 +26,7 @@ export class UserService {
 	}
 
 	public getByEmail(email: string): Observable<User> {
-		return from(this.userModel.findOne({ email }).exec);
+		return from(this.userModel.findOne({ email }).exec());
 	}
 
 	public add(newUser: CreateUserDto): Observable<User> {

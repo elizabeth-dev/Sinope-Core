@@ -1,0 +1,8 @@
+src/main/docker
+src/test
+dist
+.idea
+.eslintrc.js
+.prettierrc
+*.md
+.gitignore

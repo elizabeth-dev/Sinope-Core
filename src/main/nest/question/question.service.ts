@@ -24,7 +24,7 @@ export class QuestionService {
 	}
 
 	public getByProfile(profile: string): Observable<Question[]> {
-		return from(this.questionModel.find({ profile }).exec);
+		return from(this.questionModel.find({ profile }).exec());
 	}
 
 	public add(
