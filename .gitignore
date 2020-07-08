@@ -38,3 +38,5 @@ lerna-debug.log*
 
 # TLS certs
 /tls
+.gitsecret/keys/random_seed
+!*.secret
