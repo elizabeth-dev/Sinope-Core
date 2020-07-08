@@ -13,6 +13,7 @@ import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { TokenPair } from './interfaces/login.interface';
 import { User } from '../user/user.schema';
+import { mergeMap } from 'rxjs/operators';
 
 @Controller('auth')
 export class AuthController {
@@ -21,9 +22,9 @@ export class AuthController {
 	@Post('/login')
 	@UseGuards(AuthGuard('local'))
 	public login(
-		@Req() req: Request & { user: User },
+		@Req() req: Request & { user: Observable<User> },
 	): Observable<TokenPair> {
-		return this.authService.login(req.user);
+		return req.user.pipe(mergeMap((user) => this.authService.login(user)));
 	}
 
 	@Post('/refreshToken')

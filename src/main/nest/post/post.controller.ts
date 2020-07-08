@@ -88,7 +88,6 @@ export class PostController {
 	}
 
 	@Put(':id/likes/:profileId')
-	@HttpCode(204)
 	@UseGuards(AuthGuard('jwt'))
 	public like(
 		@Param('id') id: string,
@@ -110,11 +109,10 @@ export class PostController {
 	}
 
 	@Delete(':id/likes/:profileId')
-	@HttpCode(204)
 	@UseGuards(AuthGuard('jwt'))
-	public unLike(
+	public unlike(
 		@Param('id') id: string,
-		@Param(':profileId') profileId: string,
+		@Param('profileId') profileId: string,
 	): Observable<PostEntity> {
 		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();

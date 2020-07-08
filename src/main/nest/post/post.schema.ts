@@ -1,7 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@Schema({ timestamps: { createdAt: 'date' } })
+@Schema({
+	timestamps: { createdAt: 'date', updatedAt: false },
+	toJSON: {
+		getters: true,
+		versionKey: false,
+		transform: (doc, ret: PostEntity) => {
+			delete ret._id;
+			delete ret.user;
+
+			return ret;
+		},
+	},
+})
 export class PostEntity extends Document {
 	@Prop()
 	public content: string;

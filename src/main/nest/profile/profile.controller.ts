@@ -12,7 +12,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { PostEntity } from '../post/post.schema';
 import { PostService } from '../post/post.service';
@@ -83,7 +83,7 @@ export class ProfileController {
 	public addManager(
 		@Param('id') profile: string,
 		@Param('userId') manager: string,
-	): Observable<void> {
+	): Observable<Profile> {
 		return this.profileService.addManager(profile, manager);
 	}
 
@@ -92,7 +92,7 @@ export class ProfileController {
 	public removeManager(
 		@Param('id') profile: string,
 		@Param('userId') manager: string,
-	): Observable<void> {
+	): Observable<Profile> {
 		return this.profileService.removeManager(profile, manager);
 	}
 
@@ -162,7 +162,7 @@ export class ProfileController {
 		return this.profileService.getFollowingIds(profileId).pipe(
 			mergeMap((followingIds) => {
 				if (followingIds.length === 0) {
-					return [];
+					return of([]);
 				}
 
 				return this.postService.getByProfile(followingIds);

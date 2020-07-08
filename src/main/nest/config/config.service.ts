@@ -14,7 +14,10 @@ export class ConfigService {
 
 	constructor(filePath: string) {
 		const config = dotenv.parse(fs.readFileSync(filePath));
-		this.envConfig = ConfigService.validateInput(config);
+		this.envConfig = ConfigService.validateInput({
+			...process.env,
+			...config,
+		});
 	}
 
 	private static validateInput(envConfig: EnvConfig): EnvConfig {
@@ -33,7 +36,9 @@ export class ConfigService {
 			DB_AUTOINDEX: Joi.boolean().default(true),
 			DB_IPFAMILY: Joi.number().valid(4, 6).default(4),
 			VERSION: Joi.string().required(),
-		});
+		})
+			.unknown()
+			.options({ stripUnknown: true });
 
 		const { error, value: validatedEnvConfig } = envVarsSchema.validate(
 			envConfig,

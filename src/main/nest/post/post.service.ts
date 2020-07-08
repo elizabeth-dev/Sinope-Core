@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { from, Observable, of } from 'rxjs';
+import { map, mergeMap, mapTo } from 'rxjs/operators';
 import { CreatePostDto } from './definitions/CreatePost.dto';
 import { PostEntity } from './post.schema';
+import { QuestionService } from '../question/question.service';
 
 @Injectable()
 export class PostService {
 	constructor(
 		@InjectModel('Post')
 		private readonly postModel: Model<PostEntity>,
+		private readonly questionService: QuestionService,
 	) {}
 
 	public get(): Observable<PostEntity[]>;
@@ -25,7 +27,11 @@ export class PostService {
 
 	public getByProfile(profile: string | string[]): Observable<PostEntity[]> {
 		if (typeof profile === 'string')
-			return from(this.postModel.find({ profile }).exec());
+			return from(
+				this.postModel
+					.find({ profile: Types.ObjectId(profile) })
+					.exec(),
+			);
 
 		return from(this.postModel.find({ profile: { $in: profile } }));
 	}
@@ -44,6 +50,14 @@ export class PostService {
 					question: Types.ObjectId(question),
 				}),
 			}),
+		).pipe(
+			mergeMap((post) =>
+				question
+					? this.questionService
+							.answer(question, post.id)
+							.pipe(mapTo(post))
+					: of(post),
+			),
 		);
 	}
 
@@ -58,9 +72,13 @@ export class PostService {
 	public like(post: string, profile: string): Observable<PostEntity> {
 		return from(
 			this.postModel
-				.findByIdAndUpdate(post, {
-					$push: { likes: Types.ObjectId(profile) },
-				})
+				.findByIdAndUpdate(
+					post,
+					{
+						$addToSet: { likes: Types.ObjectId(profile) },
+					},
+					{ new: true },
+				)
 				.exec(),
 		);
 	}
@@ -68,9 +86,13 @@ export class PostService {
 	public unlike(post: string, profile: string): Observable<PostEntity> {
 		return from(
 			this.postModel
-				.findByIdAndUpdate(post, {
-					$pull: { likes: Types.ObjectId(profile) },
-				})
+				.findByIdAndUpdate(
+					post,
+					{
+						$pull: { likes: Types.ObjectId(profile) },
+					},
+					{ new: true },
+				)
 				.exec(),
 		);
 	}
@@ -79,7 +101,7 @@ export class PostService {
 		return from(
 			this.postModel
 				.find({
-					profile,
+					profile: Types.ObjectId(profile),
 					question: null,
 				})
 				.exec(),
@@ -89,7 +111,7 @@ export class PostService {
 	public getQuestions(profile: string): Observable<PostEntity[]> {
 		return from(
 			this.postModel.find({
-				profile,
+				profile: Types.ObjectId(profile),
 				question: { $exists: true },
 			}),
 		);

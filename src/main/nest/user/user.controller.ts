@@ -12,12 +12,12 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
+import { JwtPayload } from '../auth/interfaces/jwt.interface';
 import { ReqUser } from '../shared/decorators/user.decorator';
 import { CreateUserDto } from './definitions/CreateUser.dto';
 import { UpdateUserDto } from './definitions/UpdateUser.dto';
 import { User } from './user.schema';
 import { UserService } from './user.service';
-import { JwtPayload } from '../auth/interfaces/jwt.interface';
 
 @Controller('users')
 export class UserController {

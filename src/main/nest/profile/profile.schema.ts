@@ -1,7 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@Schema({ timestamps: { createdAt: 'created' } })
+@Schema({
+	timestamps: { createdAt: 'created', updatedAt: 'updated' },
+	toJSON: {
+		getters: true,
+		versionKey: false,
+		transform: (doc, ret: Profile) => {
+			delete ret._id;
+			delete ret.updated;
+
+			return ret;
+		},
+	},
+})
 export class Profile extends Document {
 	@Prop({ unique: true })
 	public tag: string;
@@ -20,6 +32,8 @@ export class Profile extends Document {
 
 	@Prop({ ref: 'Profile' })
 	public followers: Types.ObjectId[];
+
+	public updated?: Date;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

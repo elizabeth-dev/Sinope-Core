@@ -6,7 +6,7 @@ export class RefreshToken extends Document {
 	@Prop({ required: true, unique: true })
 	public refreshToken: string;
 
-	@Prop({ required: true, ref: 'user' })
+	@Prop({ required: true, ref: 'User' })
 	public user: Types.ObjectId;
 }
 

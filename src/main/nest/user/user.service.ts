@@ -43,7 +43,9 @@ export class UserService {
 	}
 
 	public update(id: string, partial: UpdateQuery<User>): Observable<User> {
-		return from(this.userModel.findByIdAndUpdate(id, partial).exec());
+		return from(
+			this.userModel.findByIdAndUpdate(id, partial, { new: true }).exec(),
+		);
 	}
 
 	public delete(id: string): Observable<void> {

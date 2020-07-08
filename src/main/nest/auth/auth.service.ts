@@ -27,11 +27,11 @@ export class AuthService {
 		password: string,
 	): Observable<User | null> {
 		return this.userService.getByEmail(email).pipe(
-			switchMap(({ password: userPass, ...user }) => {
+			switchMap((user) => {
 				if (!user) return of(null);
 
 				return this.cryptoService
-					.compareHash(password, userPass)
+					.compareHash(password, user.password)
 					.pipe(map((correctPass) => (correctPass ? user : null)));
 			}),
 		);

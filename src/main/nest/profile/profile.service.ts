@@ -49,30 +49,30 @@ export class ProfileService {
 		id: string,
 		partial: UpdateQuery<Profile>,
 	): Observable<Profile> {
-		return from(this.profileModel.findByIdAndUpdate(id, partial));
+		return from(
+			this.profileModel.findByIdAndUpdate(id, partial, { new: true }),
+		);
 	}
 
-	public addManager(id: string, manager: string): Observable<void> {
+	public addManager(id: string, manager: string): Observable<Profile> {
 		return from(
 			this.profileModel
-				.updateOne(
-					{ _id: id },
-					{
-						$push: { managers: Types.ObjectId(manager) },
-					},
+				.findByIdAndUpdate(
+					id,
+					{ $addToSet: { managers: Types.ObjectId(manager) } },
+					{ new: true },
 				)
 				.exec(),
 		);
 	}
 
-	public removeManager(id: string, exManager: string): Observable<void> {
+	public removeManager(id: string, exManager: string): Observable<Profile> {
 		return from(
 			this.profileModel
-				.updateOne(
-					{ _id: id },
-					{
-						$pull: { managers: Types.ObjectId(exManager) },
-					},
+				.findByIdAndUpdate(
+					id,
+					{ $pull: { managers: Types.ObjectId(exManager) } },
+					{ new: true },
 				)
 				.exec(),
 		);

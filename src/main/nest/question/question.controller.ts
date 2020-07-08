@@ -39,6 +39,7 @@ export class QuestionController {
 	}
 
 	@Post('')
+	@HttpCode(204)
 	@UseGuards(AuthGuard('jwt'))
 	public sendQuestion(
 		@Body() newQuestion: CreateQuestionDto,
