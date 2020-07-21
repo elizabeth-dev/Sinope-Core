@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, UpdateQuery } from 'mongoose';
+import { Model, UpdateQuery, Types } from 'mongoose';
 import { from, Observable } from 'rxjs';
 import { ignoreElements, mergeMap, map } from 'rxjs/operators';
 import { CryptoService } from '../crypto/crypto.service';
@@ -53,6 +53,30 @@ export class UserService {
 			map(() => {
 				return;
 			}),
+		);
+	}
+
+	public addProfile(id: string, profile: string): Observable<User> {
+		return from(
+			this.userModel
+				.findByIdAndUpdate(
+					id,
+					{ $addToSet: { profiles: Types.ObjectId(profile) } },
+					{ new: true },
+				)
+				.exec(),
+		);
+	}
+
+	public removeProfile(id: string, exProfile: string): Observable<User> {
+		return from(
+			this.userModel
+				.findByIdAndUpdate(
+					id,
+					{ $pull: { profiles: Types.ObjectId(exProfile) } },
+					{ new: true },
+				)
+				.exec(),
 		);
 	}
 

@@ -7,6 +7,7 @@ import { Document, Types } from 'mongoose';
 		getters: true,
 		versionKey: false,
 		transform: (doc, ret: User) => {
+			console.log(ret)
 			delete ret._id;
 			delete ret.password;
 			delete ret.updated;
@@ -28,7 +29,7 @@ export class User extends Document {
 	@Prop()
 	public lastLogin: Date;
 
-	@Prop({ ref: 'Profile' })
+	@Prop({ ref: 'profiles' })
 	public profiles: Types.ObjectId[];
 
 	public updated?: Date;

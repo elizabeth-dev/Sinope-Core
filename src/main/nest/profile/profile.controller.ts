@@ -16,12 +16,10 @@ import { Observable, of } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { PostEntity } from '../post/post.schema';
 import { PostService } from '../post/post.service';
-import { ReqUser } from '../shared/decorators/user.decorator';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { UpdateProfileDto } from './definitions/UpdateProfile.dto';
 import { Profile } from './profile.schema';
 import { ProfileService } from './profile.service';
-import { JwtPayload } from '../auth/interfaces/jwt.interface';
 
 @Controller('profiles')
 export class ProfileController {
@@ -43,11 +41,8 @@ export class ProfileController {
 
 	@Post()
 	@UseGuards(AuthGuard('jwt'))
-	public create(
-		@Body() newProfile: CreateProfileDto,
-		@ReqUser() user: JwtPayload,
-	): Observable<Profile> {
-		return this.profileService.create(newProfile, user.sub);
+	public create(@Body() newProfile: CreateProfileDto): Observable<Profile> {
+		return this.profileService.create(newProfile);
 	}
 
 	@Delete(':id')
@@ -76,24 +71,6 @@ export class ProfileController {
 		@Body() partial: UpdateProfileDto,
 	): Observable<Profile> {
 		return this.profileService.update(profile, partial);
-	}
-
-	@Put(':id/managers/:userId')
-	@UseGuards(AuthGuard('jwt'))
-	public addManager(
-		@Param('id') profile: string,
-		@Param('userId') manager: string,
-	): Observable<Profile> {
-		return this.profileService.addManager(profile, manager);
-	}
-
-	@Delete(':id/managers/:userId')
-	@UseGuards(AuthGuard('jwt'))
-	public removeManager(
-		@Param('id') profile: string,
-		@Param('userId') manager: string,
-	): Observable<Profile> {
-		return this.profileService.removeManager(profile, manager);
 	}
 
 	@Get(':id/followers')

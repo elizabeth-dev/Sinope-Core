@@ -24,9 +24,6 @@ export class Profile extends Document {
 	@Prop()
 	public description: string;
 
-	@Prop({ ref: 'User' })
-	public managers: Types.ObjectId[];
-
 	@Prop({ ref: 'Profile' })
 	public following: Types.ObjectId[];
 

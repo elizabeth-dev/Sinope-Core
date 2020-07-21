@@ -23,14 +23,10 @@ export class ProfileService {
 		return from(this.profileModel.findById(id).exec());
 	}
 
-	public create(
-		newProfile: CreateProfileDto,
-		manager: string,
-	): Observable<Profile> {
+	public create(newProfile: CreateProfileDto): Observable<Profile> {
 		return from(
 			this.profileModel.create({
 				...newProfile,
-				managers: [Types.ObjectId(manager)],
 				following: [],
 				followers: [],
 			}),
@@ -51,30 +47,6 @@ export class ProfileService {
 	): Observable<Profile> {
 		return from(
 			this.profileModel.findByIdAndUpdate(id, partial, { new: true }),
-		);
-	}
-
-	public addManager(id: string, manager: string): Observable<Profile> {
-		return from(
-			this.profileModel
-				.findByIdAndUpdate(
-					id,
-					{ $addToSet: { managers: Types.ObjectId(manager) } },
-					{ new: true },
-				)
-				.exec(),
-		);
-	}
-
-	public removeManager(id: string, exManager: string): Observable<Profile> {
-		return from(
-			this.profileModel
-				.findByIdAndUpdate(
-					id,
-					{ $pull: { managers: Types.ObjectId(exManager) } },
-					{ new: true },
-				)
-				.exec(),
 		);
 	}
 

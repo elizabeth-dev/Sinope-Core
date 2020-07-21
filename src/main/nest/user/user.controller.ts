@@ -23,6 +23,12 @@ import { UserService } from './user.service';
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
+	@Get('')
+	@UseGuards(AuthGuard('jwt'))
+	public getSelf(@ReqUser() user: JwtPayload): Observable<User> {
+		return this.userService.get(user.sub);
+	}
+
 	@Get(':id')
 	public getById(@Param('id') id: string): Observable<User> {
 		return this.userService.get(id);
@@ -55,5 +61,23 @@ export class UserController {
 		if (user.sub === id) return this.userService.delete(id);
 
 		throw new ForbiddenException();
+	}
+
+	@Put(':id/profiles/:profileId')
+	@UseGuards(AuthGuard('jwt'))
+	public addProfile(
+		@Param('id') user: string,
+		@Param('profileId') profile: string,
+	): Observable<User> {
+		return this.userService.addProfile(user, profile);
+	}
+
+	@Delete(':id/profiles/:profileId')
+	@UseGuards(AuthGuard('jwt'))
+	public removeProfile(
+		@Param('id') user: string,
+		@Param('profileId') profile: string,
+	): Observable<User> {
+		return this.userService.removeProfile(user, profile);
 	}
 }
