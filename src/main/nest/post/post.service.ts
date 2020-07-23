@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { from, Observable, of } from 'rxjs';
-import { map, mergeMap, mapTo } from 'rxjs/operators';
+import { map, mapTo, mergeMap } from 'rxjs/operators';
+import { QuestionService } from '../question/question.service';
 import { CreatePostDto } from './definitions/CreatePost.dto';
 import { PostEntity } from './post.schema';
-import { QuestionService } from '../question/question.service';
 
 @Injectable()
 export class PostService {
@@ -30,10 +30,22 @@ export class PostService {
 			return from(
 				this.postModel
 					.find({ profile: Types.ObjectId(profile) })
+					.sort({ date: -1 })
 					.exec(),
 			);
 
-		return from(this.postModel.find({ profile: { $in: profile } }));
+		return from(
+			this.postModel
+				.find({
+					profile: {
+						$in: profile.map((profileId) =>
+							Types.ObjectId(profileId),
+						),
+					},
+				})
+				.sort({ date: -1 })
+				.exec(),
+		);
 	}
 
 	public add(

@@ -78,6 +78,6 @@ export class UserController {
 		@Param('id') user: string,
 		@Param('profileId') profile: string,
 	): Observable<User> {
-		return this.userService.removeProfile(user, profile);
+		return this.userService.removeProfile(profile, user);
 	}
 }

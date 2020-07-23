@@ -20,6 +20,8 @@ import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { UpdateProfileDto } from './definitions/UpdateProfile.dto';
 import { Profile } from './profile.schema';
 import { ProfileService } from './profile.service';
+import { ReqUser } from '../shared/decorators/user.decorator';
+import { JwtPayload } from '../auth/interfaces/jwt.interface';
 
 @Controller('profiles')
 export class ProfileController {
@@ -41,8 +43,11 @@ export class ProfileController {
 
 	@Post()
 	@UseGuards(AuthGuard('jwt'))
-	public create(@Body() newProfile: CreateProfileDto): Observable<Profile> {
-		return this.profileService.create(newProfile);
+	public create(
+		@Body() newProfile: CreateProfileDto,
+		@ReqUser() user: JwtPayload,
+	): Observable<Profile> {
+		return this.profileService.create(newProfile, user.sub);
 	}
 
 	@Delete(':id')
@@ -136,14 +141,12 @@ export class ProfileController {
 			throw new ForbiddenException();
 		}*/
 
-		return this.profileService.getFollowingIds(profileId).pipe(
-			mergeMap((followingIds) => {
-				if (followingIds.length === 0) {
-					return of([]);
-				}
-
-				return this.postService.getByProfile(followingIds);
-			}),
-		);
+		return this.profileService
+			.getFollowingIds(profileId)
+			.pipe(
+				mergeMap((followingIds) =>
+					this.postService.getByProfile([...followingIds, profileId]),
+				),
+			);
 	}
 }

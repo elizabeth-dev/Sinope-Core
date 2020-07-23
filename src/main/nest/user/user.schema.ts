@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as mSchema } from 'mongoose';
 
 @Schema({
 	timestamps: { createdAt: 'created', updatedAt: 'updated' },
@@ -7,7 +7,6 @@ import { Document, Types } from 'mongoose';
 		getters: true,
 		versionKey: false,
 		transform: (doc, ret: User) => {
-			console.log(ret)
 			delete ret._id;
 			delete ret.password;
 			delete ret.updated;
@@ -29,7 +28,7 @@ export class User extends Document {
 	@Prop()
 	public lastLogin: Date;
 
-	@Prop({ ref: 'profiles' })
+	@Prop([{ type: mSchema.Types.ObjectId, ref: 'Profile' }])
 	public profiles: Types.ObjectId[];
 
 	public updated?: Date;

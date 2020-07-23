@@ -2,15 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import { combineLatest, from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, mergeMap, mapTo } from 'rxjs/operators';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { Profile } from './profile.schema';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ProfileService {
 	constructor(
-		@InjectModel(Profile.name)
+		@InjectModel('Profile')
 		private readonly profileModel: Model<Profile>,
+		private readonly userService: UserService,
 	) {}
 
 	public get(): Observable<Profile[]>;
@@ -23,21 +25,30 @@ export class ProfileService {
 		return from(this.profileModel.findById(id).exec());
 	}
 
-	public create(newProfile: CreateProfileDto): Observable<Profile> {
+	public create(
+		newProfile: CreateProfileDto,
+		user: string,
+	): Observable<Profile> {
 		return from(
 			this.profileModel.create({
 				...newProfile,
 				following: [],
 				followers: [],
 			}),
+		).pipe(
+			mergeMap((profile) =>
+				this.userService
+					.addProfile(user, profile.id)
+					.pipe(mapTo(profile)),
+			),
 		);
 	}
 
 	public delete(id: string): Observable<void> {
-		return from(this.profileModel.deleteOne({ _id: id }).exec()).pipe(
-			map(() => {
-				return;
-			}),
+		return from(this.profileModel.findByIdAndDelete(id).exec()).pipe(
+			mergeMap(() =>
+				this.userService.removeProfile(id).pipe(map(() => {})),
+			),
 		);
 	}
 

@@ -7,7 +7,7 @@ import { CryptoModule } from '../crypto/crypto.module';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { RefreshTokenSchema, RefreshToken } from './refresh-token.schema';
+import { RefreshTokenSchema } from './refresh-token.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 
@@ -28,7 +28,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 		PassportModule,
 		CryptoModule,
 		MongooseModule.forFeature([
-			{ name: RefreshToken.name, schema: RefreshTokenSchema },
+			{ name: 'RefreshToken', schema: RefreshTokenSchema },
 		]),
 	],
 	exports: [PassportModule, AuthService],

@@ -18,7 +18,7 @@ export class AuthService {
 		private readonly userService: UserService,
 		private readonly jwtService: JwtService,
 		private readonly cryptoService: CryptoService,
-		@InjectModel(RefreshToken.name)
+		@InjectModel('RefreshToken')
 		private readonly tokenModel: Model<RefreshToken>,
 	) {}
 
@@ -43,7 +43,7 @@ export class AuthService {
 
 	private genRefreshToken(user: Types.ObjectId): Observable<string> {
 		const refreshToken = uuidv4();
-		
+
 		return from(this.tokenModel.create({ refreshToken, user })).pipe(
 			map(({ refreshToken }) => refreshToken),
 		);

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, UpdateQuery, Types } from 'mongoose';
+import { Model, Types, UpdateQuery } from 'mongoose';
 import { from, Observable } from 'rxjs';
-import { ignoreElements, mergeMap, map } from 'rxjs/operators';
+import { ignoreElements, map, mergeMap } from 'rxjs/operators';
 import { CryptoService } from '../crypto/crypto.service';
 import { CreateUserDto } from './definitions/CreateUser.dto';
 import { User } from './user.schema';
@@ -10,7 +10,7 @@ import { User } from './user.schema';
 @Injectable()
 export class UserService {
 	constructor(
-		@InjectModel(User.name)
+		@InjectModel('User')
 		private readonly userModel: Model<User>,
 		private readonly cryptoService: CryptoService,
 	) {}
@@ -68,12 +68,26 @@ export class UserService {
 		);
 	}
 
-	public removeProfile(id: string, exProfile: string): Observable<User> {
+	public removeProfile(exProfile: string, id?: string): Observable<User> {
+		if (id) {
+			return from(
+				this.userModel
+					.findByIdAndUpdate(
+						id,
+						{ $pull: { profiles: Types.ObjectId(exProfile) } },
+						{ new: true },
+					)
+					.exec(),
+			);
+		}
+
+		const exProfileId = Types.ObjectId(exProfile);
+
 		return from(
 			this.userModel
-				.findByIdAndUpdate(
-					id,
-					{ $pull: { profiles: Types.ObjectId(exProfile) } },
+				.updateMany(
+					{ profiles: exProfileId },
+					{ $pull: { profiles: exProfileId } },
 					{ new: true },
 				)
 				.exec(),

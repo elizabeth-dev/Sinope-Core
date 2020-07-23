@@ -9,7 +9,7 @@ import { Question } from './question.schema';
 @Injectable()
 export class QuestionService {
 	constructor(
-		@InjectModel(Question.name)
+		@InjectModel('Question')
 		private readonly questionModel: Model<Question>,
 	) {}
 
