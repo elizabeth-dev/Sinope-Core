@@ -6,6 +6,7 @@ import { map, mapTo, mergeMap } from 'rxjs/operators';
 import { QuestionService } from '../question/question.service';
 import { CreatePostDto } from './definitions/CreatePost.dto';
 import { PostEntity } from './post.schema';
+import { Profile } from '../profile/profile.schema';
 
 @Injectable()
 export class PostService {
@@ -79,6 +80,16 @@ export class PostService {
 				return;
 			}),
 		);
+	}
+
+	public getLikes(post: string): Observable<Profile[]> {
+		return from(
+			this.postModel
+				.findById(post)
+				.populate('likes')
+				.select('likes')
+				.exec(),
+		).pipe(map((post: PostEntity & { likes: Profile[] }) => post.likes));
 	}
 
 	public like(post: string, profile: string): Observable<PostEntity> {

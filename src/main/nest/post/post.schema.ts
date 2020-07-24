@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as mSchema } from 'mongoose';
 
 @Schema({
 	timestamps: { createdAt: 'date', updatedAt: false },
@@ -24,7 +24,7 @@ export class PostEntity extends Document {
 	@Prop({ ref: 'User' })
 	public user: Types.ObjectId;
 
-	@Prop({ ref: 'Profile' })
+	@Prop([{ type: mSchema.Types.ObjectId, ref: 'Profile' }])
 	public likes: Types.ObjectId[];
 
 	@Prop({ ref: 'Question' })

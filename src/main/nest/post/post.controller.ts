@@ -20,6 +20,7 @@ import { PostService } from './post.service';
 import { CreatePostDto } from './definitions/CreatePost.dto';
 import { JwtPayload } from '../auth/interfaces/jwt.interface';
 import { ReqUser } from '../shared/decorators/user.decorator';
+import { Profile } from '../profile/profile.schema';
 
 @Controller('posts')
 export class PostController {
@@ -83,6 +84,24 @@ export class PostController {
 				// Check permissions
 
 				return this.postService.delete(id);
+			}),
+		);
+	}
+
+	@Get(':id/likes')
+	@UseGuards(AuthGuard('jwt'))
+	public getLikes(@Param('id') id: string): Observable<Profile[]> {
+		/*if (user.profileIds.indexOf(profileId) === -1) {
+			throw new ForbiddenException();
+		}*/
+
+		return this.postService.get(id).pipe(
+			mergeMap((post) => {
+				if (!post) {
+					throw new NotFoundException();
+				}
+
+				return this.postService.getLikes(id);
 			}),
 		);
 	}
