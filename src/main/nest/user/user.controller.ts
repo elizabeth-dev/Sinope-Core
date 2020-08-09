@@ -6,7 +6,6 @@ import {
 	Get,
 	HttpCode,
 	Param,
-	Post,
 	Put,
 	UseGuards,
 } from '@nestjs/common';
@@ -14,7 +13,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { JwtPayload } from '../auth/interfaces/jwt.interface';
 import { ReqUser } from '../shared/decorators/user.decorator';
-import { CreateUserDto } from './definitions/CreateUser.dto';
 import { UpdateUserDto } from './definitions/UpdateUser.dto';
 import { User } from './user.schema';
 import { UserService } from './user.service';
@@ -32,11 +30,6 @@ export class UserController {
 	@Get(':id')
 	public getById(@Param('id') id: string): Observable<User> {
 		return this.userService.get(id);
-	}
-
-	@Post()
-	public create(@Body() newUser: CreateUserDto): Observable<User> {
-		return this.userService.add(newUser);
 	}
 
 	@Put(':id')

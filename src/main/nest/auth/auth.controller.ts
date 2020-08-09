@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { TokenPair } from './interfaces/login.interface';
 import { User } from '../user/user.schema';
 import { mergeMap } from 'rxjs/operators';
+import { CreateUserDto } from '../user/definitions/CreateUser.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -25,6 +26,11 @@ export class AuthController {
 		@Req() req: Request & { user: Observable<User> },
 	): Observable<TokenPair> {
 		return req.user.pipe(mergeMap((user) => this.authService.login(user)));
+	}
+
+	@Post('/register')
+	public register(@Body() newUser: CreateUserDto): Observable<TokenPair> {
+		return this.authService.register(newUser);
 	}
 
 	@Post('/refreshToken')

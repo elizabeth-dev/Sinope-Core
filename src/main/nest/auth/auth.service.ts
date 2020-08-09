@@ -3,9 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { from, Observable, of } from 'rxjs';
-import { ignoreElements, map, switchMap } from 'rxjs/operators';
+import { ignoreElements, map, mergeMap, switchMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { CryptoService } from '../crypto/crypto.service';
+import { CreateUserDto } from '../user/definitions/CreateUser.dto';
 import { User } from '../user/user.schema';
 import { UserService } from '../user/user.service';
 import { JwtPayload } from './interfaces/jwt.interface';
@@ -87,6 +88,24 @@ export class AuthService {
 				jwt: this.genJwt({ email, name, sub }),
 				expiresAt: Date.now() + 15 * 60,
 			})),
+		);
+	}
+
+	public register(newUser: CreateUserDto): Observable<TokenPair> {
+		return this.userService.add(newUser).pipe(
+			mergeMap((user) =>
+				this.genRefreshToken(Types.ObjectId(user.id)).pipe(
+					map((refreshToken) => ({
+						refreshToken,
+						jwt: this.genJwt({
+							email: user.email,
+							name: user.name,
+							sub: user.id,
+						}),
+						expiresAt: Date.now() + 15 * 60,
+					})),
+				),
+			),
 		);
 	}
 
