@@ -40,7 +40,7 @@ export class AuthController {
 		const { refreshToken } = body;
 		if (!refreshToken) throw new UnauthorizedException();
 
-		return this.authService.refreshJwt(refreshToken);
+		return this.authService.refreshAccessToken(refreshToken);
 	}
 
 	@Post('/logout')
@@ -54,7 +54,7 @@ export class AuthController {
 
 	@Get('/check')
 	@HttpCode(204)
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public check(): void {
 		return;
 	}

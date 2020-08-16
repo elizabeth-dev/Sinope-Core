@@ -1,34 +1,25 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigService } from '../config/config.service';
 import { CryptoModule } from '../crypto/crypto.module';
 import { UserModule } from '../user/user.module';
+import { AccessTokenSchema } from './access-token.schema';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RefreshTokenSchema } from './refresh-token.schema';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { TokenStrategy } from './strategies/token.strategy';
 
 @Module({
-	providers: [AuthService, JwtStrategy, LocalStrategy],
+	providers: [AuthService, TokenStrategy, LocalStrategy],
 	imports: [
-		PassportModule.register({ defaultStrategy: 'jwt' }),
-		JwtModule.registerAsync({
-			useFactory: async (config: ConfigService) => ({
-				secret: config.authConfig.privkey,
-				signOptions: {
-					expiresIn: '15m',
-				},
-			}),
-			inject: [ConfigService],
-		}),
+		PassportModule.register({ defaultStrategy: 'bearer' }),
 		UserModule,
 		PassportModule,
 		CryptoModule,
 		MongooseModule.forFeature([
 			{ name: 'RefreshToken', schema: RefreshTokenSchema },
+			{ name: 'AccessToken', schema: AccessTokenSchema },
 		]),
 	],
 	exports: [PassportModule, AuthService],

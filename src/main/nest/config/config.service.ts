@@ -62,7 +62,7 @@ export class ConfigService {
 	public get authConfig(): AuthConfig {
 		return {
 			privkey: this.envConfig.AUTH_PRIVATE_KEY,
-			jwtDuration: Number(this.envConfig.AUTH_JWT_DURATION),
+			accessTokenDuration: Number(this.envConfig.AUTH_JWT_DURATION),
 		};
 	}
 

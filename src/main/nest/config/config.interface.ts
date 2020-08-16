@@ -1,6 +1,6 @@
 export interface AuthConfig {
 	privkey: string;
-	jwtDuration: number;
+	accessTokenDuration: number;
 }
 
 export interface DbConfig {

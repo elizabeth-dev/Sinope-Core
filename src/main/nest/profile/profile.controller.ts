@@ -12,7 +12,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { PostEntity } from '../post/post.schema';
 import { PostService } from '../post/post.service';
@@ -21,7 +21,7 @@ import { UpdateProfileDto } from './definitions/UpdateProfile.dto';
 import { Profile } from './profile.schema';
 import { ProfileService } from './profile.service';
 import { ReqUser } from '../shared/decorators/user.decorator';
-import { JwtPayload } from '../auth/interfaces/jwt.interface';
+import { User } from '../user/user.schema';
 
 @Controller('profiles')
 export class ProfileController {
@@ -42,17 +42,19 @@ export class ProfileController {
 	}
 
 	@Post()
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public create(
 		@Body() newProfile: CreateProfileDto,
-		@ReqUser() user: JwtPayload,
+		@ReqUser() user: Observable<User>,
 	): Observable<Profile> {
-		return this.profileService.create(newProfile, user.sub);
+		return user.pipe(
+			mergeMap((user) => this.profileService.create(newProfile, user.id)),
+		);
 	}
 
 	@Delete(':id')
 	@HttpCode(204)
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public delete(@Param('id') id: string): Observable<void> {
 		return this.profileService.get(id).pipe(
 			mergeMap((profile) => {
@@ -70,7 +72,7 @@ export class ProfileController {
 	}
 
 	@Put(':id')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public update(
 		@Param('id') profile: string,
 		@Body() partial: UpdateProfileDto,
@@ -101,7 +103,7 @@ export class ProfileController {
 	}
 
 	@Put(':id/followers/:follower')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public follow(
 		@Param('id') profile: string,
 		@Param('follower') follower: string,
@@ -118,7 +120,7 @@ export class ProfileController {
 	}
 
 	@Delete(':id/followers/:follower')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public unfollow(
 		@Param('id') profile: string,
 		@Param('follower') unfollower: string,
@@ -135,7 +137,7 @@ export class ProfileController {
 	}
 
 	@Get(':id/timeline')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public timeline(@Param('id') profileId: string): Observable<PostEntity[]> {
 		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();

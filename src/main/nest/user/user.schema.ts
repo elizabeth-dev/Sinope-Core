@@ -25,9 +25,6 @@ export class User extends Document {
 	@Prop()
 	public password: string;
 
-	@Prop()
-	public lastLogin: Date;
-
 	@Prop([{ type: mSchema.Types.ObjectId, ref: 'Profile' }])
 	public profiles: Types.ObjectId[];
 

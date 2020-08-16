@@ -17,15 +17,15 @@ import { mergeMap, tap } from 'rxjs/operators';
 import { Question } from './question.schema';
 import { QuestionService } from './question.service';
 import { CreateQuestionDto } from './definitions/CreateQuestion.dto';
-import { JwtPayload } from '../auth/interfaces/jwt.interface';
 import { ReqUser } from '../shared/decorators/user.decorator';
+import { User } from '../user/user.schema';
 
 @Controller('questions')
 export class QuestionController {
 	constructor(private readonly questionService: QuestionService) {}
 
 	@Get('')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public getReceivedQuestions(
 		@Query('profile') profile: string,
 	): Observable<Question[]> {
@@ -40,16 +40,18 @@ export class QuestionController {
 
 	@Post('')
 	@HttpCode(204)
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public sendQuestion(
 		@Body() newQuestion: CreateQuestionDto,
-		@ReqUser() user: JwtPayload,
+		@ReqUser() user: Observable<User>,
 	): Observable<Question> {
-		return this.questionService.add(newQuestion, user.sub);
+		return user.pipe(
+			mergeMap((user) => this.questionService.add(newQuestion, user.id)),
+		);
 	}
 
 	@Get(':id')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public getById(@Param('id') id: string): Observable<Question> {
 		return this.questionService.get(id).pipe(
 			tap((question) => {
@@ -66,7 +68,7 @@ export class QuestionController {
 
 	@Delete(':id')
 	@HttpCode(204)
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public delete(@Param('id') id: string): Observable<void> {
 		return this.questionService.get(id).pipe(
 			mergeMap((question) => {

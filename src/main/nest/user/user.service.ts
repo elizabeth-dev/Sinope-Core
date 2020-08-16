@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import { from, Observable } from 'rxjs';
-import { ignoreElements, map, mergeMap } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
 import { CryptoService } from '../crypto/crypto.service';
 import { CreateUserDto } from './definitions/CreateUser.dto';
 import { User } from './user.schema';
@@ -35,7 +35,6 @@ export class UserService {
 				this.userModel.create({
 					...newUser,
 					password,
-					lastLogin: undefined,
 					profiles: [],
 				}),
 			),
@@ -92,11 +91,5 @@ export class UserService {
 				)
 				.exec(),
 		);
-	}
-
-	public setActivity(id: string, date = new Date()): Observable<never> {
-		return from(
-			this.userModel.findByIdAndUpdate(id, { lastLogin: date }),
-		).pipe(ignoreElements());
 	}
 }

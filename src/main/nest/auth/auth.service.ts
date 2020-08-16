@@ -1,15 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { from, Observable, of } from 'rxjs';
+import { forkJoin, from, Observable, of } from 'rxjs';
 import { ignoreElements, map, mergeMap, switchMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { CryptoService } from '../crypto/crypto.service';
 import { CreateUserDto } from '../user/definitions/CreateUser.dto';
 import { User } from '../user/user.schema';
 import { UserService } from '../user/user.service';
-import { JwtPayload } from './interfaces/jwt.interface';
+import { AccessToken } from './access-token.schema';
 import { TokenPair } from './interfaces/login.interface';
 import { RefreshToken } from './refresh-token.schema';
 
@@ -17,10 +16,11 @@ import { RefreshToken } from './refresh-token.schema';
 export class AuthService {
 	constructor(
 		private readonly userService: UserService,
-		private readonly jwtService: JwtService,
 		private readonly cryptoService: CryptoService,
 		@InjectModel('RefreshToken')
-		private readonly tokenModel: Model<RefreshToken>,
+		private readonly refreshTokenModel: Model<RefreshToken>,
+		@InjectModel('AccessToken')
+		private readonly accessTokenModel: Model<AccessToken>,
 	) {}
 
 	public validateUser(
@@ -38,27 +38,54 @@ export class AuthService {
 		);
 	}
 
-	public genJwt(payload: Omit<JwtPayload, 'exp'>): string {
-		return this.jwtService.sign(payload);
-	}
+	public validateToken(accessToken: string): Observable<User | null> {
+		return from(
+			this.accessTokenModel
+				.findOneAndUpdate({ accessToken }, { lastAccess: new Date() })
+				.populate('user')
+				.exec(),
+		).pipe(
+			map((token: AccessToken & { user: User }) => {
+				if (!token || token.expiresAt.getTime() <= Date.now())
+					return null;
 
-	private genRefreshToken(user: Types.ObjectId): Observable<string> {
-		const refreshToken = uuidv4();
-
-		return from(this.tokenModel.create({ refreshToken, user })).pipe(
-			map(({ refreshToken }) => refreshToken),
+				return token.user;
+			}),
 		);
 	}
 
-	public setActivity(id: string): Observable<void> {
-		return this.userService.setActivity(id);
+	public genAccessToken(
+		user: string,
+		refreshToken: string,
+	): Observable<AccessToken> {
+		const accessToken = uuidv4();
+
+		return from(
+			this.accessTokenModel.create({
+				accessToken,
+				expiresAt: new Date(Date.now() + 15 * 60),
+				user: Types.ObjectId(user),
+				refreshToken,
+			}),
+		);
 	}
 
-	public refreshJwt(oldRefreshToken: string): Observable<TokenPair> {
+	private genRefreshToken(user: string): Observable<string> {
 		const refreshToken = uuidv4();
 
 		return from(
-			this.tokenModel
+			this.refreshTokenModel.create({
+				refreshToken,
+				user: Types.ObjectId(user),
+			}),
+		).pipe(map(({ refreshToken }) => refreshToken));
+	}
+
+	public refreshAccessToken(oldRefreshToken: string): Observable<TokenPair> {
+		const refreshToken = uuidv4();
+
+		return from(
+			this.refreshTokenModel
 				.findOneAndUpdate(
 					{ refreshToken: oldRefreshToken },
 					{ refreshToken },
@@ -66,52 +93,60 @@ export class AuthService {
 				.populate('user')
 				.exec(),
 		).pipe(
-			map((tokenEntry: RefreshToken & { user: User }) => {
+			mergeMap((tokenEntry: RefreshToken & { user: User }) => {
+				// TODO: Check token substitution before checking if user exists [security]
 				if (!tokenEntry || !tokenEntry.user)
 					throw new UnauthorizedException();
 
-				const { email, name, id: sub } = tokenEntry.user;
+				const { id: sub } = tokenEntry.user;
 
-				return {
-					refreshToken,
-					jwt: this.genJwt({ email, name, sub }),
-					expiresAt: Date.now() + 15 * 60,
-				};
+				return this.genAccessToken(sub, refreshToken).pipe(
+					map(({ accessToken, expiresAt }) => ({
+						refreshToken,
+						accessToken,
+						expiresAt: expiresAt.getTime(),
+					})),
+				);
 			}),
 		);
 	}
 
-	public login({ email, name, id: sub }: User): Observable<TokenPair> {
-		return this.genRefreshToken(Types.ObjectId(sub)).pipe(
-			map((refreshToken) => ({
-				refreshToken,
-				jwt: this.genJwt({ email, name, sub }),
-				expiresAt: Date.now() + 15 * 60,
-			})),
-		);
-	}
-
-	public register(newUser: CreateUserDto): Observable<TokenPair> {
-		return this.userService.add(newUser).pipe(
-			mergeMap((user) =>
-				this.genRefreshToken(Types.ObjectId(user.id)).pipe(
-					map((refreshToken) => ({
+	public login({ id: sub }: User): Observable<TokenPair> {
+		return this.genRefreshToken(sub).pipe(
+			mergeMap((refreshToken) =>
+				this.genAccessToken(sub, refreshToken).pipe(
+					map(({ accessToken, expiresAt }) => ({
 						refreshToken,
-						jwt: this.genJwt({
-							email: user.email,
-							name: user.name,
-							sub: user.id,
-						}),
-						expiresAt: Date.now() + 15 * 60,
+						accessToken,
+						expiresAt: expiresAt.getTime(),
 					})),
 				),
 			),
 		);
 	}
 
-	public logout(refreshToken: string): Observable<void> {
-		return from(this.tokenModel.deleteOne({ refreshToken }).exec()).pipe(
-			ignoreElements(),
+	public register(newUser: CreateUserDto): Observable<TokenPair> {
+		return this.userService.add(newUser).pipe(
+			mergeMap((user) =>
+				this.genRefreshToken(user.id).pipe(
+					mergeMap((refreshToken) =>
+						this.genAccessToken(user.id, refreshToken).pipe(
+							map(({ accessToken, expiresAt }) => ({
+								refreshToken,
+								accessToken,
+								expiresAt: expiresAt.getTime(),
+							})),
+						),
+					),
+				),
+			),
 		);
+	}
+
+	public logout(refreshToken: string): Observable<void> {
+		return forkJoin(
+			from(this.refreshTokenModel.deleteOne({ refreshToken }).exec()),
+			from(this.accessTokenModel.deleteMany({ refreshToken })),
+		).pipe(ignoreElements());
 	}
 }

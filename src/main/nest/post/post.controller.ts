@@ -18,9 +18,9 @@ import { mergeMap, tap } from 'rxjs/operators';
 import { PostEntity } from './post.schema';
 import { PostService } from './post.service';
 import { CreatePostDto } from './definitions/CreatePost.dto';
-import { JwtPayload } from '../auth/interfaces/jwt.interface';
 import { ReqUser } from '../shared/decorators/user.decorator';
 import { Profile } from '../profile/profile.schema';
+import { User } from '../user/user.schema';
 
 @Controller('posts')
 export class PostController {
@@ -50,16 +50,18 @@ export class PostController {
 	}
 
 	@Post('')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public addPost(
 		@Body() newPost: CreatePostDto,
-		@ReqUser() user: JwtPayload,
+		@ReqUser() user: Observable<User>,
 	): Observable<PostEntity> {
 		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();
 		}*/
 
-		return this.postService.add(newPost, user.sub);
+		return user.pipe(
+			mergeMap((user) => this.postService.add(newPost, user.id)),
+		);
 	}
 
 	@Get(':id')
@@ -73,7 +75,7 @@ export class PostController {
 
 	@Delete(':id')
 	@HttpCode(204)
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public delete(@Param('id') id: string): Observable<void> {
 		return this.postService.get(id).pipe(
 			mergeMap((post) => {
@@ -89,7 +91,7 @@ export class PostController {
 	}
 
 	@Get(':id/likes')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public getLikes(@Param('id') id: string): Observable<Profile[]> {
 		/*if (user.profileIds.indexOf(profileId) === -1) {
 			throw new ForbiddenException();
@@ -107,7 +109,7 @@ export class PostController {
 	}
 
 	@Put(':id/likes/:profileId')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public like(
 		@Param('id') id: string,
 		@Param('profileId') profileId: string,
@@ -128,7 +130,7 @@ export class PostController {
 	}
 
 	@Delete(':id/likes/:profileId')
-	@UseGuards(AuthGuard('jwt'))
+	@UseGuards(AuthGuard('bearer'))
 	public unlike(
 		@Param('id') id: string,
 		@Param('profileId') profileId: string,
