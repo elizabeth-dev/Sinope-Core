@@ -44,10 +44,10 @@ export class ProfileService {
 		);
 	}
 
-	public delete(id: string): Observable<void> {
+	public delete(id: string): Observable<Profile> {
 		return from(this.profileModel.findByIdAndDelete(id).exec()).pipe(
-			mergeMap(() =>
-				this.userService.removeProfile(id).pipe(map(() => {})),
+			mergeMap((profile) =>
+				this.userService.removeProfile(id).pipe(mapTo(profile)),
 			),
 		);
 	}

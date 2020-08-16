@@ -1,26 +1,27 @@
 import {
+	BadRequestException,
+	Body,
 	Controller,
 	Delete,
+	ForbiddenException,
 	Get,
 	HttpCode,
 	NotFoundException,
 	Param,
-	Put,
-	UseGuards,
-	Query,
-	BadRequestException,
 	Post,
-	Body,
+	Put,
+	Query,
+	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { mergeMap, tap, map } from 'rxjs/operators';
+import { Profile } from '../profile/profile.schema';
+import { ReqUser } from '../shared/decorators/user.decorator';
+import { User } from '../user/user.schema';
+import { CreatePostDto } from './definitions/CreatePost.dto';
 import { PostEntity } from './post.schema';
 import { PostService } from './post.service';
-import { CreatePostDto } from './definitions/CreatePost.dto';
-import { ReqUser } from '../shared/decorators/user.decorator';
-import { Profile } from '../profile/profile.schema';
-import { User } from '../user/user.schema';
 
 @Controller('posts')
 export class PostController {
@@ -53,14 +54,19 @@ export class PostController {
 	@UseGuards(AuthGuard('bearer'))
 	public addPost(
 		@Body() newPost: CreatePostDto,
-		@ReqUser() user: Observable<User>,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<PostEntity> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(newPost.profile) === -1
+				)
+					throw new ForbiddenException();
 
-		return user.pipe(
-			mergeMap((user) => this.postService.add(newPost, user.id)),
+				return this.postService.add(newPost, user.id);
+			}),
 		);
 	}
 
@@ -76,27 +82,35 @@ export class PostController {
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
-	public delete(@Param('id') id: string): Observable<void> {
-		return this.postService.get(id).pipe(
-			mergeMap((post) => {
-				if (!post) {
-					throw new NotFoundException();
-				}
+	public delete(
+		@Param('id') id: string,
+		@ReqUser() reqUser$: Observable<User>,
+	): Observable<void> {
+		return reqUser$.pipe(
+			mergeMap((user) =>
+				this.postService.get(id).pipe(
+					mergeMap((post) => {
+						if (!post) {
+							throw new NotFoundException();
+						}
 
-				// Check permissions
+						if (
+							user.profiles
+								.map((el) => el.toHexString())
+								.indexOf(post.profile.toHexString()) === -1
+						)
+							throw new ForbiddenException();
 
-				return this.postService.delete(id);
-			}),
+						return this.postService.delete(id);
+					}),
+				),
+			),
 		);
 	}
 
 	@Get(':id/likes')
 	@UseGuards(AuthGuard('bearer'))
 	public getLikes(@Param('id') id: string): Observable<Profile[]> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
-
 		return this.postService.get(id).pipe(
 			mergeMap((post) => {
 				if (!post) {
@@ -113,18 +127,25 @@ export class PostController {
 	public like(
 		@Param('id') id: string,
 		@Param('profileId') profileId: string,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<PostEntity> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(profileId) === -1
+				)
+					throw new ForbiddenException();
 
-		return this.postService.get(id).pipe(
-			mergeMap((post) => {
+				return this.postService.like(id, profileId);
+			}),
+			map((post) => {
 				if (!post) {
 					throw new NotFoundException();
 				}
 
-				return this.postService.like(id, profileId);
+				return post;
 			}),
 		);
 	}
@@ -134,18 +155,25 @@ export class PostController {
 	public unlike(
 		@Param('id') id: string,
 		@Param('profileId') profileId: string,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<PostEntity> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(profileId) === -1
+				)
+					throw new ForbiddenException();
 
-		return this.postService.get(id).pipe(
-			mergeMap((post) => {
+				return this.postService.unlike(id, profileId);
+			}),
+			map((post) => {
 				if (!post) {
 					throw new NotFoundException();
 				}
 
-				return this.postService.unlike(id, profileId);
+				return post;
 			}),
 		);
 	}

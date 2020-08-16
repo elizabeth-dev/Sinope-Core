@@ -37,11 +37,12 @@ export class UserController {
 	public update(
 		@Param('id') id: string,
 		@Body() partial: UpdateUserDto,
-		@ReqUser() user: Observable<User>,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<User> {
-		return user.pipe(
+		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (user.id !== id) throw new ForbiddenException();
+
 				return this.userService.update(id, partial);
 			}),
 		);
@@ -52,11 +53,12 @@ export class UserController {
 	@UseGuards(AuthGuard('bearer'))
 	public delete(
 		@Param('id') id: string,
-		@ReqUser() user: Observable<User>,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<void> {
-		return user.pipe(
+		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (user.id !== id) throw new ForbiddenException();
+
 				return this.userService.delete(id);
 			}),
 		);
@@ -67,8 +69,20 @@ export class UserController {
 	public addProfile(
 		@Param('id') user: string,
 		@Param('profileId') profile: string,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<User> {
-		return this.userService.addProfile(user, profile);
+		return reqUser$.pipe(
+			mergeMap((reqUser) => {
+				if (
+					reqUser.profiles
+						.map((el) => el.toHexString())
+						.indexOf(profile) === -1
+				)
+					throw new ForbiddenException();
+
+				return this.userService.addProfile(user, profile);
+			}),
+		);
 	}
 
 	@Delete(':id/profiles/:profileId')
@@ -76,7 +90,19 @@ export class UserController {
 	public removeProfile(
 		@Param('id') user: string,
 		@Param('profileId') profile: string,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<User> {
-		return this.userService.removeProfile(profile, user);
+		return reqUser$.pipe(
+			mergeMap((reqUser) => {
+				if (
+					reqUser.profiles
+						.map((el) => el.toHexString())
+						.indexOf(profile) === -1
+				)
+					throw new ForbiddenException();
+
+				return this.userService.removeProfile(user, profile);
+			}),
+		);
 	}
 }

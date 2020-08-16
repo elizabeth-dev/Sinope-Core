@@ -3,6 +3,7 @@ import {
 	Body,
 	Controller,
 	Delete,
+	ForbiddenException,
 	Get,
 	HttpCode,
 	NotFoundException,
@@ -13,15 +14,15 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { map, mergeMap, tap } from 'rxjs/operators';
 import { PostEntity } from '../post/post.schema';
 import { PostService } from '../post/post.service';
+import { ReqUser } from '../shared/decorators/user.decorator';
+import { User } from '../user/user.schema';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { UpdateProfileDto } from './definitions/UpdateProfile.dto';
 import { Profile } from './profile.schema';
 import { ProfileService } from './profile.service';
-import { ReqUser } from '../shared/decorators/user.decorator';
-import { User } from '../user/user.schema';
 
 @Controller('profiles')
 export class ProfileController {
@@ -45,9 +46,9 @@ export class ProfileController {
 	@UseGuards(AuthGuard('bearer'))
 	public create(
 		@Body() newProfile: CreateProfileDto,
-		@ReqUser() user: Observable<User>,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<Profile> {
-		return user.pipe(
+		return reqUser$.pipe(
 			mergeMap((user) => this.profileService.create(newProfile, user.id)),
 		);
 	}
@@ -55,18 +56,24 @@ export class ProfileController {
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
-	public delete(@Param('id') id: string): Observable<void> {
-		return this.profileService.get(id).pipe(
-			mergeMap((profile) => {
-				if (!profile) {
-					throw new NotFoundException();
-				}
-
-				/*if (profile.managerIds.indexOf(user.id) === -1) {
+	public delete(
+		@Param('id') id: string,
+		@ReqUser() reqUser$: Observable<User>,
+	): Observable<void> {
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles.map((el) => el.toHexString()).indexOf(id) ===
+					-1
+				)
 					throw new ForbiddenException();
-				}*/
 
 				return this.profileService.delete(id);
+			}),
+			map((profile) => {
+				if (!profile) throw new NotFoundException();
+
+				return;
 			}),
 		);
 	}
@@ -76,8 +83,20 @@ export class ProfileController {
 	public update(
 		@Param('id') profile: string,
 		@Body() partial: UpdateProfileDto,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<Profile> {
-		return this.profileService.update(profile, partial);
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(profile) === -1
+				)
+					throw new ForbiddenException();
+
+				return this.profileService.update(profile, partial);
+			}),
+		);
 	}
 
 	@Get(':id/followers')
@@ -107,16 +126,24 @@ export class ProfileController {
 	public follow(
 		@Param('id') profile: string,
 		@Param('follower') follower: string,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<void> {
-		/*if (user.profileIds.indexOf(follower) === -1) {
-			throw new ForbiddenException();
-		}*/
-
 		if (profile === follower) {
 			throw new BadRequestException();
 		}
 
-		return this.profileService.follow(profile, follower);
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(follower) === -1
+				)
+					throw new ForbiddenException();
+
+				return this.profileService.follow(profile, follower);
+			}),
+		);
 	}
 
 	@Delete(':id/followers/:follower')
@@ -124,31 +151,52 @@ export class ProfileController {
 	public unfollow(
 		@Param('id') profile: string,
 		@Param('follower') unfollower: string,
+		@ReqUser() reqUser$: Observable<User>,
 	): Observable<void> {
-		/*if (user.profileIds.indexOf(unfollower) === -1) {
-			throw new ForbiddenException();
-		}*/
-
 		if (profile === unfollower) {
 			throw new BadRequestException();
 		}
 
-		return this.profileService.unfollow(profile, unfollower);
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(unfollower) === -1
+				)
+					throw new ForbiddenException();
+
+				return this.profileService.follow(profile, unfollower);
+			}),
+		);
 	}
 
 	@Get(':id/timeline')
 	@UseGuards(AuthGuard('bearer'))
-	public timeline(@Param('id') profileId: string): Observable<PostEntity[]> {
-		/*if (user.profileIds.indexOf(profileId) === -1) {
-			throw new ForbiddenException();
-		}*/
+	public timeline(
+		@Param('id') profileId: string,
+		@ReqUser() reqUser$: Observable<User>,
+	): Observable<PostEntity[]> {
+		return reqUser$.pipe(
+			mergeMap((user) => {
+				if (
+					user.profiles
+						.map((el) => el.toHexString())
+						.indexOf(profileId) === -1
+				)
+					throw new ForbiddenException();
 
-		return this.profileService
-			.getFollowingIds(profileId)
-			.pipe(
-				mergeMap((followingIds) =>
-					this.postService.getByProfile([...followingIds, profileId]),
-				),
-			);
+				return this.profileService
+					.getFollowingIds(profileId)
+					.pipe(
+						mergeMap((followingIds) =>
+							this.postService.getByProfile([
+								...followingIds,
+								profileId,
+							]),
+						),
+					);
+			}),
+		);
 	}
 }
