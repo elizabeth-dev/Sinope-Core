@@ -1,14 +1,4 @@
-import {
-	Body,
-	Controller,
-	Delete,
-	ForbiddenException,
-	Get,
-	HttpCode,
-	Param,
-	Put,
-	UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, Param, Put, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { ReqUser } from '../shared/decorators/user.decorator';
@@ -19,12 +9,13 @@ import { mergeMap } from 'rxjs/operators';
 
 @Controller('users')
 export class UserController {
-	constructor(private readonly userService: UserService) {}
+	constructor(private readonly userService: UserService) {
+	}
 
 	@Get('')
 	@UseGuards(AuthGuard('bearer'))
-	public getSelf(@ReqUser() user: Observable<User>): Observable<User> {
-		return user;
+	public getSelf(@ReqUser() user$: Observable<User>): Observable<User> {
+		return user$.pipe(mergeMap(user => this.userService.get(user.id)));
 	}
 
 	@Get(':id')
