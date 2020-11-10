@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, HookSyncCallback, Schema as mSchema, Types } from 'mongoose';
+import { Document, Schema as mSchema, Types } from 'mongoose';
 
 @Schema({
 	timestamps: {
@@ -34,13 +34,4 @@ export class PostEntity extends Document {
 	public question?: Types.ObjectId;
 }
 
-const populateProfile: HookSyncCallback<PostEntity> = (next) => {
-	this.populate('profile');
-	next();
-};
-
-export const PostEntitySchema = SchemaFactory.createForClass(PostEntity)
-	.pre('find', populateProfile)
-	.pre('findOne', populateProfile)
-	.pre('findOneAndUpdate', populateProfile)
-	.pre('save', populateProfile);
+export const PostEntitySchema = SchemaFactory.createForClass(PostEntity);
