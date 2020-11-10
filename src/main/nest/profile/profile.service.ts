@@ -82,10 +82,11 @@ export class ProfileService {
 	}
 
 	public search(searchTerm: string): Observable<Profile[]> {
+		// FIXME: Unvalidated user input
 		return from(this.profileModel.find({
 			$or: [
-				{ name: `/${searchTerm}/` },
-				{ tag: `/${searchTerm}/` },
+				{ name: new RegExp(`${searchTerm}`, 'i') },
+				{ tag: new RegExp(`${searchTerm}`, 'i') },
 			],
 		}).exec());
 	}

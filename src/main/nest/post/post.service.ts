@@ -139,6 +139,7 @@ export class PostService {
     }
 
     public search(searchTerm: string): Observable<PostEntity[]> {
-        return from(this.postModel.find({content: `/${searchTerm}/`}).exec())
+        // FIXME: Unvalidated user input
+        return from(this.postModel.find({content: new RegExp(`${searchTerm}`, 'i')}).exec())
     }
 }
