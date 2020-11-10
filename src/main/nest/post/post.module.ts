@@ -6,7 +6,7 @@ import { PostService } from './post.service';
 import { QuestionModule } from '../question/question.module';
 import { HookSyncCallback } from 'mongoose';
 
-const populateProfile: HookSyncCallback<any> = (next) => {
+const populateProfile: HookSyncCallback<any> = function(next) {
 	this.populate('profile');
 	next();
 };
