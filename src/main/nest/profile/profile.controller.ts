@@ -166,7 +166,7 @@ export class ProfileController {
 				)
 					throw new ForbiddenException();
 
-				return this.profileService.follow(profile, unfollower);
+				return this.profileService.unfollow(profile, unfollower);
 			}),
 		);
 	}

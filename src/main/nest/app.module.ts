@@ -9,6 +9,7 @@ import { PostModule } from './post/post.module';
 import { ProfileModule } from './profile/profile.module';
 import { QuestionModule } from './question/question.module';
 import { UserModule } from './user/user.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
 	imports: [
@@ -30,6 +31,7 @@ import { UserModule } from './user/user.module';
 		CryptoModule,
 		ProfileModule,
 		QuestionModule,
+		SearchModule,
 	],
 	controllers: [AppController],
 	providers: [],
