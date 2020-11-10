@@ -31,6 +31,10 @@ export class Profile extends Document {
 	public followers: Types.ObjectId[];
 
 	public updated?: Date;
+
+	public followingThem?: boolean;
+	public followingMe?: boolean;
+
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);
