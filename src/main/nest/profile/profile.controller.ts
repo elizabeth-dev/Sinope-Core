@@ -9,7 +9,7 @@ import {
 	NotFoundException,
 	Param,
 	Post,
-	Put,
+	Put, Query,
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -32,8 +32,8 @@ export class ProfileController {
 	) {}
 
 	@Get(':id')
-	public get(@Param('id') id: string): Observable<Profile> {
-		return this.profileService.get(id).pipe(
+	public get(@Param('id') id: string, @Query('profile') fromProfile?: string): Observable<Profile> {
+		return this.profileService.get(id, fromProfile).pipe(
 			tap((profile) => {
 				if (!profile) {
 					throw new NotFoundException();
