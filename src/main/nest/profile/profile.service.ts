@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import { combineLatest, from, Observable } from 'rxjs';
-import { map, mapTo, mergeMap, tap } from 'rxjs/operators';
+import { map, mapTo, mergeMap } from 'rxjs/operators';
 import { CreateProfileDto } from './definitions/CreateProfile.dto';
 import { Profile } from './profile.schema';
 import { UserService } from '../user/user.service';
@@ -14,13 +14,15 @@ export class ProfileService {
 	}
 
 	public get(id: string, fromProfile?: string): Observable<Profile> {
-		return from(this.profileModel.findById(id).exec()).pipe(tap((profile) => {
-			if (fromProfile) {
+		return from(this.profileModel.findById(id).exec()).pipe(map((profile) => {
+			if (profile && fromProfile) {
 				profile.followingMe =
 					profile.following.map(el => el.toHexString()).indexOf(fromProfile) !== -1;
 				profile.followingThem =
 					profile.followers.map(el => el.toHexString()).indexOf(fromProfile) !== -1;
 			}
+
+			return profile;
 		}));
 	}
 
