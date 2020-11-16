@@ -14,7 +14,17 @@ export class ProfileService {
 	}
 
 	public get(id: string, fromProfile?: string): Observable<Profile> {
-		return from(this.profileModel.findById(id).exec());
+		return from(this.profileModel.findById(id).exec())
+			.pipe(map(profile => profile.toObject()), map((profile) => {
+				if (profile && fromProfile) {
+					profile.followingMe =
+						profile.following.map(el => el.toHexString()).indexOf(fromProfile) !== -1;
+					profile.followingThem =
+						profile.followers.map(el => el.toHexString()).indexOf(fromProfile) !== -1;
+				}
+
+				return profile;
+			}));
 	}
 
 	public create(newProfile: CreateProfileDto, user: string): Observable<Profile> {

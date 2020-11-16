@@ -39,16 +39,6 @@ export class ProfileController {
 					throw new NotFoundException();
 				}
 			}),
-			map((profile) => {
-				if (profile && fromProfile) {
-					profile.followingMe =
-						profile.following.map(el => el.toHexString()).indexOf(fromProfile) !== -1;
-					profile.followingThem =
-						profile.followers.map(el => el.toHexString()).indexOf(fromProfile) !== -1;
-				}
-
-				return profile;
-			})
 		);
 	}
 
