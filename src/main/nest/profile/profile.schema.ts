@@ -13,6 +13,16 @@ import { Document, Types } from 'mongoose';
 			return ret;
 		},
 	},
+	toObject: { // FIXME: Calling toObject at PostService to mutate "following" fields
+		getters: true,
+		versionKey: false,
+		transform: (doc, ret: Profile) => {
+			delete ret._id;
+			delete ret.updated;
+
+			return ret;
+		},
+	},
 })
 export class Profile extends Document {
 	@Prop({ unique: true })
