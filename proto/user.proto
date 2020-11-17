@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "app.sinope.uranium";
+option java_outer_classname = "UserProto";
+option objc_class_prefix = "HLW";
+
+package app.sinope.uranium;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service UserEndpoint {
+  rpc GetSelfUser (google.protobuf.Empty) returns (User);
+  rpc GetUser (SelectUserRequest) returns (User);
+  rpc UpdateUser (UpdateUserRequest) returns (User);
+  rpc DeleteUser (SelectUserRequest) returns (google.protobuf.Empty);
+  rpc AddProfileToUser (SelectUserProfileRequest) returns (User);
+  rpc RemoveProfileFromUser (SelectUserProfileRequest) returns (User);
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  repeated string profile = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message UpdateUserRequest {
+  reserved "email";
+
+  string name = 1;
+}
+
+message SelectUserRequest {
+  string id = 1;
+}
+
+message SelectUserProfileRequest {
+  string user = 1;
+  string profile = 2;
+}
