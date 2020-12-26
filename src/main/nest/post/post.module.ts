@@ -6,8 +6,9 @@ import { PostService } from './post.service';
 import { QuestionModule } from '../question/question.module';
 import { HookSyncCallback } from 'mongoose';
 
-const populateProfile: HookSyncCallback<any> = function(next) {
+const populatePost: HookSyncCallback<any> = function(next) {
 	this.populate('profile');
+	this.populate('question');
 	next();
 };
 
@@ -18,10 +19,10 @@ const populateProfile: HookSyncCallback<any> = function(next) {
 				name: 'Post',
 				useFactory: () => {
 					const schema = PostEntitySchema;
-					schema.pre('find', populateProfile)
-						.pre('findOne', populateProfile)
-						.pre('findOneAndUpdate', populateProfile)
-						.pre('save', populateProfile);
+					schema.pre('find', populatePost)
+						.pre('findOne', populatePost)
+						.pre('findOneAndUpdate', populatePost)
+						.pre('save', populatePost);
 					return schema;
 				},
 			},
