@@ -59,7 +59,7 @@ export class QuestionController {
 				if (
 					user.profiles
 						.map((el) => el.toHexString())
-						.indexOf(newQuestion.profile) === -1
+						.indexOf(newQuestion.from) === -1
 				)
 					throw new ForbiddenException();
 

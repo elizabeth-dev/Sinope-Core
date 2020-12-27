@@ -9,7 +9,7 @@ export class CreateQuestionDto {
 	anonymous: boolean;
 
 	@IsMongoId()
-	profile: string;
+	from: string;
 
 	@IsMongoId()
 	recipient: string;

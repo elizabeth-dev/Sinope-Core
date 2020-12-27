@@ -32,7 +32,7 @@ export class QuestionService {
 	}
 
 	public add(
-		{ profile, recipient, ...newQuestion }: CreateQuestionDto,
+		{ from: profile, recipient, ...newQuestion }: CreateQuestionDto,
 		user: string,
 	): Observable<Question> {
 		return from(
