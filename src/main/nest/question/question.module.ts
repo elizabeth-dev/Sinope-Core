@@ -5,7 +5,7 @@ import { QuestionSchema } from './question.schema';
 import { QuestionService } from './question.service';
 import { HookSyncCallback } from 'mongoose';
 
-const populateQuestion: HookSyncCallback<any> = function(next) {
+const populateQuestion: HookSyncCallback<any> = function (next) {
 	this.populate('from');
 	next();
 };
@@ -17,14 +17,15 @@ const populateQuestion: HookSyncCallback<any> = function(next) {
 				name: 'Question',
 				useFactory: () => {
 					const schema = QuestionSchema;
-					schema.pre('find', populateQuestion)
-						.pre('findOne', populateQuestion)
-						.pre('findOneAndUpdate', populateQuestion)
-						.pre('save', populateQuestion);
+					schema
+						.pre(/find/, populateQuestion)
+						.pre(/findOne/, populateQuestion)
+						.pre(/findOneAndUpdate/, populateQuestion)
+						.pre(/save/, populateQuestion);
 					return schema;
 				},
 			},
-		])
+		]),
 	],
 	controllers: [QuestionController],
 	providers: [QuestionService],
