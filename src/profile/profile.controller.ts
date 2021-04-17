@@ -15,7 +15,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
 import { PostRes } from 'src/post/definitions/PostRes.dto';
@@ -36,6 +36,12 @@ export class ProfileController {
 	) {}
 
 	@Get(':id')
+	@ApiQuery({
+		name: 'profile',
+		required: false,
+		description:
+			'Used to check if the profiles returned are followers or follows of the requestor profile.',
+	})
 	public get(
 		@Param('id') id: string,
 		@Query('profile') fromProfile?: string,
@@ -46,7 +52,19 @@ export class ProfileController {
 					throw new NotFoundException();
 				}
 			}),
-			map((profile) => new ProfileRes(profile)),
+			map((profile) =>
+				fromProfile
+					? new ProfileRes(
+							profile,
+							profile.followers
+								.map((el) => el.toHexString())
+								.indexOf(fromProfile) !== -1,
+							profile.following
+								.map((el) => el.toHexString())
+								.indexOf(fromProfile) !== -1,
+					  )
+					: new ProfileRes(profile),
+			),
 		);
 	}
 
@@ -110,8 +128,15 @@ export class ProfileController {
 	}
 
 	@Get(':id/followers')
+	@ApiQuery({
+		name: 'profile',
+		required: false,
+		description:
+			'Used to check if the profiles returned are followers or follows of the requestor profile.',
+	})
 	public getFollowers(
 		@Param('id') profileId: string,
+		@Query('profile') fromProfile?: string,
 	): Observable<ProfileRes[]> {
 		return this.profileService.getFollowers(profileId).pipe(
 			tap((followers) => {
@@ -120,14 +145,33 @@ export class ProfileController {
 				}
 			}),
 			map((profiles) =>
-				profiles.map((profile) => new ProfileRes(profile)),
+				profiles.map((profile) =>
+					fromProfile
+						? new ProfileRes(
+								profile,
+								profile.followers
+									.map((el) => el.toHexString())
+									.indexOf(fromProfile) !== -1,
+								profile.following
+									.map((el) => el.toHexString())
+									.indexOf(fromProfile) !== -1,
+						  )
+						: new ProfileRes(profile),
+				),
 			),
 		);
 	}
 
 	@Get(':id/following')
+	@ApiQuery({
+		name: 'profile',
+		required: false,
+		description:
+			'Used to check if the profiles returned are followers or follows the requestor profile.',
+	})
 	public getFollowing(
 		@Param('id') profileId: string,
+		@Query('profile') fromProfile?: string,
 	): Observable<ProfileRes[]> {
 		return this.profileService.getFollowing(profileId).pipe(
 			tap((following) => {
@@ -136,7 +180,19 @@ export class ProfileController {
 				}
 			}),
 			map((profiles) =>
-				profiles.map((profile) => new ProfileRes(profile)),
+				profiles.map((profile) =>
+					fromProfile
+						? new ProfileRes(
+								profile,
+								profile.followers
+									.map((el) => el.toHexString())
+									.indexOf(fromProfile) !== -1,
+								profile.following
+									.map((el) => el.toHexString())
+									.indexOf(fromProfile) !== -1,
+						  )
+						: new ProfileRes(profile),
+				),
 			),
 		);
 	}

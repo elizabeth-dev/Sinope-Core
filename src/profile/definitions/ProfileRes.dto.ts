@@ -29,7 +29,11 @@ export class ProfileRes {
 	@ApiProperty()
 	public followingMe?: boolean;
 
-	constructor(profileEntity: ProfileEntity) {
+	constructor(
+		profileEntity: ProfileEntity,
+		followingThem?: boolean,
+		followingMe?: boolean,
+	) {
 		this.id = profileEntity._id;
 		this.tag = profileEntity.tag;
 		this.name = profileEntity.name;
@@ -41,5 +45,7 @@ export class ProfileRes {
 		this.followerIds = profileEntity.followers.map((el) =>
 			el.toHexString(),
 		);
+		this.followingMe = followingMe;
+		this.followingThem = followingThem;
 	}
 }
