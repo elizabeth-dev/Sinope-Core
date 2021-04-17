@@ -10,6 +10,4 @@ export class RefreshTokenEntity extends Document {
 	public user: Types.ObjectId;
 }
 
-export const RefreshTokenSchema = SchemaFactory.createForClass(
-	RefreshTokenEntity,
-);
+export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshTokenEntity);

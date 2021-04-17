@@ -40,29 +40,21 @@ export class PostRes {
 
 		if (postEntity.profile && postEntity.populated('profile')) {
 			this.profileId = ((postEntity.profile as unknown) as ProfileEntity)._id;
-			this.profile = new ProfileRes(
-				(postEntity.profile as unknown) as ProfileEntity,
-			);
+			this.profile = new ProfileRes((postEntity.profile as unknown) as ProfileEntity);
 		} else {
 			this.profileId = postEntity.profile.toHexString();
 		}
 
 		if (postEntity.likes && postEntity.populated('likes')) {
-			this.likeIds = ((postEntity.likes as unknown) as ProfileEntity[]).map(
-				(el) => el._id,
-			);
-			this.likes = ((postEntity.likes as unknown) as ProfileEntity[]).map(
-				(el) => new ProfileRes(el),
-			);
+			this.likeIds = ((postEntity.likes as unknown) as ProfileEntity[]).map((el) => el._id);
+			this.likes = ((postEntity.likes as unknown) as ProfileEntity[]).map((el) => new ProfileRes(el));
 		} else {
 			this.likeIds = postEntity.likes.map((el) => el.toHexString());
 		}
 
 		if (postEntity.question && postEntity.populated('question')) {
 			this.questionId = ((postEntity.question as unknown) as QuestionEntity)._id;
-			this.question = new QuestionRes(
-				(postEntity.question as unknown) as QuestionEntity,
-			);
+			this.question = new QuestionRes((postEntity.question as unknown) as QuestionEntity);
 		} else {
 			this.questionId = postEntity.question.toHexString();
 		}

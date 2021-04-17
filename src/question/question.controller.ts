@@ -16,6 +16,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { forkJoin, Observable } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
+import { checkPerms } from 'src/shared/utils/user.utils';
 import { ReqUser } from '../shared/decorators/user.decorator';
 import { UserEntity } from '../user/user.schema';
 import { CreateQuestionReq } from './definitions/CreateQuestionReq.dto';
@@ -37,18 +38,11 @@ export class QuestionController {
 
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profile) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, profile)) throw new ForbiddenException();
 
 				return this.questionService.getByProfile(profile);
 			}),
-			map((questions) =>
-				questions.map((question) => new QuestionRes(question)),
-			),
+			map((questions) => questions.map((question) => new QuestionRes(question))),
 		);
 	}
 
@@ -61,12 +55,7 @@ export class QuestionController {
 	): Observable<QuestionRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(newQuestion.from) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, newQuestion.from)) throw new ForbiddenException();
 
 				return this.questionService.add(newQuestion, user.id);
 			}),
@@ -76,22 +65,12 @@ export class QuestionController {
 
 	@Get(':id')
 	@UseGuards(AuthGuard('bearer'))
-	public getById(
-		@Param('id') id: string,
-		@ReqUser() reqUser$: Observable<UserEntity>,
-	): Observable<QuestionRes> {
+	public getById(@Param('id') id: string, @ReqUser() reqUser$: Observable<UserEntity>): Observable<QuestionRes> {
 		return forkJoin([reqUser$, this.questionService.get(id)]).pipe(
 			tap(([user, question]) => {
-				if (!question) {
-					throw new NotFoundException();
-				}
+				if (!question) throw new NotFoundException();
 
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(question.recipient.toHexString()) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, question.recipient.toHexString())) throw new ForbiddenException();
 			}),
 			map(([, question]) => new QuestionRes(question)),
 		);
@@ -100,22 +79,12 @@ export class QuestionController {
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
-	public delete(
-		@Param('id') id: string,
-		@ReqUser() reqUser$: Observable<UserEntity>,
-	): Observable<void> {
+	public delete(@Param('id') id: string, @ReqUser() reqUser$: Observable<UserEntity>): Observable<void> {
 		return forkJoin([reqUser$, this.questionService.get(id)]).pipe(
 			mergeMap(([user, question]) => {
-				if (!question) {
-					throw new NotFoundException();
-				}
+				if (!question) throw new NotFoundException();
 
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(question.recipient.toHexString()) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, question.recipient.toHexString())) throw new ForbiddenException();
 
 				return this.questionService.delete(id);
 			}),

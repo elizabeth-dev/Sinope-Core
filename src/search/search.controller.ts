@@ -13,9 +13,7 @@ export class SearchController {
 	constructor(private readonly searchService: SearchService) {}
 
 	@Get(':searchTerm')
-	public searchProfiles(
-		@Param('searchTerm') searchTerm: string,
-	): Observable<SearchRes> {
+	public searchProfiles(@Param('searchTerm') searchTerm: string): Observable<SearchRes> {
 		return forkJoin({
 			profiles: this.searchService.profiles(searchTerm),
 			posts: this.searchService.posts(searchTerm),

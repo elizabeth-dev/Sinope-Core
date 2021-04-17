@@ -7,11 +7,7 @@ import { ProfileSchema } from './profile.schema';
 import { ProfileService } from './profile.service';
 
 @Module({
-	imports: [
-		MongooseModule.forFeature([{ name: 'Profile', schema: ProfileSchema }]),
-		PostModule,
-		UserModule,
-	],
+	imports: [MongooseModule.forFeature([{ name: 'Profile', schema: ProfileSchema }]), PostModule, UserModule],
 	providers: [ProfileService],
 	controllers: [ProfileController],
 	exports: [ProfileService],

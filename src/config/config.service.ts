@@ -22,9 +22,7 @@ export class ConfigService {
 
 	private static validateInput(envConfig: EnvConfig): EnvConfig {
 		const envVarsSchema: Joi.ObjectSchema = Joi.object({
-			NODE_ENV: Joi.string()
-				.valid('dev', 'production', 'test', 'integration')
-				.default('dev'),
+			NODE_ENV: Joi.string().valid('dev', 'production', 'test', 'integration').default('dev'),
 			PORT: Joi.number().default(3000),
 			CORS_ORIGIN: Joi.string().default(true),
 			AUTH_SALT_ROUNDS: Joi.number().required(),
@@ -40,9 +38,7 @@ export class ConfigService {
 			.unknown()
 			.options({ stripUnknown: true });
 
-		const { error, value: validatedEnvConfig } = envVarsSchema.validate(
-			envConfig,
-		);
+		const { error, value: validatedEnvConfig } = envVarsSchema.validate(envConfig);
 		if (error) {
 			throw new Error(`Config validation error: ${error.message}`);
 		}

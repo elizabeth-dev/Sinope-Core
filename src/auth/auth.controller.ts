@@ -1,13 +1,4 @@
-import {
-	Body,
-	Controller,
-	Get,
-	HttpCode,
-	Post,
-	Req,
-	UnauthorizedException,
-	UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -24,9 +15,7 @@ export class AuthController {
 
 	@Post('/login')
 	@UseGuards(AuthGuard('local'))
-	public login(
-		@Req() req: Request & { user: Observable<UserEntity> },
-	): Observable<TokenPair> {
+	public login(@Req() req: Request & { user: Observable<UserEntity> }): Observable<TokenPair> {
 		return req.user.pipe(mergeMap((user) => this.authService.login(user)));
 	}
 
@@ -36,9 +25,7 @@ export class AuthController {
 	}
 
 	@Post('/refreshToken')
-	public refreshToken(
-		@Body() body: { refreshToken: string },
-	): Observable<TokenPair> {
+	public refreshToken(@Body() body: { refreshToken: string }): Observable<TokenPair> {
 		const { refreshToken } = body;
 		if (!refreshToken) throw new UnauthorizedException();
 

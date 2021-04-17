@@ -24,11 +24,7 @@ export class QuestionService {
 	}
 
 	public getByProfile(profile: string): Observable<QuestionEntity[]> {
-		return from(
-			this.questionModel
-				.find({ recipient: Types.ObjectId(profile), answer: null })
-				.exec(),
-		);
+		return from(this.questionModel.find({ recipient: Types.ObjectId(profile), answer: null }).exec());
 	}
 
 	public add(
@@ -54,12 +50,7 @@ export class QuestionService {
 	}
 
 	public answer(question: string, post: string): Observable<void> {
-		return from(
-			this.questionModel.updateOne(
-				{ _id: question },
-				{ answer: Types.ObjectId(post) },
-			),
-		).pipe(
+		return from(this.questionModel.updateOne({ _id: question }, { answer: Types.ObjectId(post) })).pipe(
 			map(() => {
 				return;
 			}),

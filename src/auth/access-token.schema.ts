@@ -19,6 +19,4 @@ export class AccessTokenEntity extends Document {
 	public lastAccess?: Date;
 }
 
-export const AccessTokenSchema = SchemaFactory.createForClass(
-	AccessTokenEntity,
-);
+export const AccessTokenSchema = SchemaFactory.createForClass(AccessTokenEntity);

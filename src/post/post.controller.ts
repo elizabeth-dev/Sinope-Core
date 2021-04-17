@@ -18,6 +18,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { mergeMap, tap, map } from 'rxjs/operators';
 import { ProfileRes } from 'src/profile/definitions/ProfileRes.dto';
+import { checkPerms } from 'src/shared/utils/user.utils';
 import { ReqUser } from '../shared/decorators/user.decorator';
 import { UserEntity } from '../user/user.schema';
 import { CreatePostReq } from './definitions/CreatePostReq.dto';
@@ -30,46 +31,29 @@ export class PostController {
 	constructor(private readonly postService: PostService) {}
 
 	@Get('')
-	public getPostsByProfile(
-		@Query('profile') profile: string,
-		@Query('type') type: string,
-	): Observable<PostRes[]> {
+	public getPostsByProfile(@Query('profile') profile: string, @Query('type') type: string): Observable<PostRes[]> {
 		if (!profile) throw new BadRequestException();
 
 		if (type) {
 			if (type === 'message')
 				return this.postService
 					.getMessages(profile)
-					.pipe(
-						map((posts) => posts.map((post) => new PostRes(post))),
-					);
+					.pipe(map((posts) => posts.map((post) => new PostRes(post))));
 			if (type === 'question')
 				return this.postService
 					.getQuestions(profile)
-					.pipe(
-						map((posts) => posts.map((post) => new PostRes(post))),
-					);
+					.pipe(map((posts) => posts.map((post) => new PostRes(post))));
 		}
 
-		return this.postService
-			.getByProfile(profile)
-			.pipe(map((posts) => posts.map((post) => new PostRes(post))));
+		return this.postService.getByProfile(profile).pipe(map((posts) => posts.map((post) => new PostRes(post))));
 	}
 
 	@Post('')
 	@UseGuards(AuthGuard('bearer'))
-	public addPost(
-		@Body() newPost: CreatePostReq,
-		@ReqUser() reqUser$: Observable<UserEntity>,
-	): Observable<PostRes> {
+	public addPost(@Body() newPost: CreatePostReq, @ReqUser() reqUser$: Observable<UserEntity>): Observable<PostRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(newPost.profile) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, newPost.profile)) throw new ForbiddenException();
 
 				return this.postService.add(newPost, user.id);
 			}),
@@ -90,24 +74,14 @@ export class PostController {
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
-	public delete(
-		@Param('id') id: string,
-		@ReqUser() reqUser$: Observable<UserEntity>,
-	): Observable<void> {
+	public delete(@Param('id') id: string, @ReqUser() reqUser$: Observable<UserEntity>): Observable<void> {
 		return reqUser$.pipe(
 			mergeMap((user) =>
 				this.postService.get(id).pipe(
 					mergeMap((post) => {
-						if (!post) {
-							throw new NotFoundException();
-						}
+						if (!post) throw new NotFoundException();
 
-						if (
-							user.profiles
-								.map((el) => el.toHexString())
-								.indexOf(post.profile.toHexString()) === -1
-						)
-							throw new ForbiddenException();
+						if (checkPerms(user, post.profile.toHexString())) throw new ForbiddenException();
 
 						return this.postService.delete(id);
 					}),
@@ -121,15 +95,11 @@ export class PostController {
 	public getLikes(@Param('id') id: string): Observable<ProfileRes[]> {
 		return this.postService.get(id).pipe(
 			mergeMap((post) => {
-				if (!post) {
-					throw new NotFoundException();
-				}
+				if (!post) throw new NotFoundException();
 
 				return this.postService.getLikes(id);
 			}),
-			map((profiles) =>
-				profiles.map((profile) => new ProfileRes(profile)),
-			),
+			map((profiles) => profiles.map((profile) => new ProfileRes(profile))),
 		);
 	}
 
@@ -142,19 +112,12 @@ export class PostController {
 	): Observable<PostRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profileId) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, profileId)) throw new ForbiddenException();
 
 				return this.postService.like(id, profileId);
 			}),
 			tap((post) => {
-				if (!post) {
-					throw new NotFoundException();
-				}
+				if (!post) throw new NotFoundException();
 			}),
 			map((post) => new PostRes(post)),
 		);
@@ -169,19 +132,12 @@ export class PostController {
 	): Observable<PostRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profileId) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, profileId)) throw new ForbiddenException();
 
 				return this.postService.unlike(id, profileId);
 			}),
 			tap((post) => {
-				if (!post) {
-					throw new NotFoundException();
-				}
+				if (!post) throw new NotFoundException();
 			}),
 			map((post) => new PostRes(post)),
 		);

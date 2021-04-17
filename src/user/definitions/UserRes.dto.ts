@@ -25,12 +25,8 @@ export class UserRes {
 		this.created = userEntity.created;
 
 		if (userEntity.profiles && userEntity.populated('profiles')) {
-			this.profileIds = ((userEntity.profiles as unknown) as ProfileEntity[]).map(
-				(el) => el._id,
-			);
-			this.profiles = ((userEntity.profiles as unknown) as ProfileEntity[]).map(
-				(el) => new ProfileRes(el),
-			);
+			this.profileIds = ((userEntity.profiles as unknown) as ProfileEntity[]).map((el) => el._id);
+			this.profiles = ((userEntity.profiles as unknown) as ProfileEntity[]).map((el) => new ProfileRes(el));
 		} else {
 			this.profileIds = userEntity.profiles.map((el) => el.toHexString());
 		}

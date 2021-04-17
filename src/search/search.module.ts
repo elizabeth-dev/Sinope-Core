@@ -5,8 +5,8 @@ import { PostModule } from '../post/post.module';
 import { ProfileModule } from '../profile/profile.module';
 
 @Module({
-  controllers: [SearchController],
-  providers: [SearchService],
-  imports: [PostModule, ProfileModule]
+	controllers: [SearchController],
+	providers: [SearchService],
+	imports: [PostModule, ProfileModule],
 })
 export class SearchModule {}

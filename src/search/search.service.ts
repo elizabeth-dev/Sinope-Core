@@ -7,10 +7,7 @@ import { PostEntity } from '../post/post.schema';
 
 @Injectable()
 export class SearchService {
-	constructor(
-		private readonly postService: PostService,
-		private readonly profileService: ProfileService,
-	) {}
+	constructor(private readonly postService: PostService, private readonly profileService: ProfileService) {}
 
 	public profiles(searchTerm: string): Observable<ProfileEntity[]> {
 		return this.profileService.search(searchTerm);

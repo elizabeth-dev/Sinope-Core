@@ -19,6 +19,8 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
 import { PostRes } from 'src/post/definitions/PostRes.dto';
+import { includesProfile } from 'src/shared/utils/profile.utils';
+import { checkPerms } from 'src/shared/utils/user.utils';
 import { PostService } from '../post/post.service';
 import { ReqUser } from '../shared/decorators/user.decorator';
 import { UserEntity } from '../user/user.schema';
@@ -30,38 +32,25 @@ import { ProfileService } from './profile.service';
 @ApiTags('Profile controller')
 @Controller('profiles')
 export class ProfileController {
-	constructor(
-		private readonly profileService: ProfileService,
-		private readonly postService: PostService,
-	) {}
+	constructor(private readonly profileService: ProfileService, private readonly postService: PostService) {}
 
 	@Get(':id')
 	@ApiQuery({
 		name: 'profile',
 		required: false,
-		description:
-			'Used to check if the profiles returned are followers or follows of the requestor profile.',
+		description: 'Used to check if the profiles returned are followers or follows of the requestor profile.',
 	})
-	public get(
-		@Param('id') id: string,
-		@Query('profile') fromProfile?: string,
-	): Observable<ProfileRes> {
+	public get(@Param('id') id: string, @Query('profile') fromProfile?: string): Observable<ProfileRes> {
 		return this.profileService.get(id).pipe(
 			tap((profile) => {
-				if (!profile) {
-					throw new NotFoundException();
-				}
+				if (!profile) throw new NotFoundException();
 			}),
 			map((profile) =>
 				fromProfile
 					? new ProfileRes(
 							profile,
-							profile.followers
-								.map((el) => el.toHexString())
-								.indexOf(fromProfile) !== -1,
-							profile.following
-								.map((el) => el.toHexString())
-								.indexOf(fromProfile) !== -1,
+							includesProfile(profile.followers, fromProfile),
+							includesProfile(profile.following, fromProfile),
 					  )
 					: new ProfileRes(profile),
 			),
@@ -83,17 +72,10 @@ export class ProfileController {
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
-	public delete(
-		@Param('id') id: string,
-		@ReqUser() reqUser$: Observable<UserEntity>,
-	): Observable<void> {
+	public delete(@Param('id') id: string, @ReqUser() reqUser$: Observable<UserEntity>): Observable<void> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles.map((el) => el.toHexString()).indexOf(id) ===
-					-1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, id)) throw new ForbiddenException();
 
 				return this.profileService.delete(id);
 			}),
@@ -114,12 +96,7 @@ export class ProfileController {
 	): Observable<ProfileRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profile) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, profile)) throw new ForbiddenException();
 
 				return this.profileService.update(profile, partial);
 			}),
@@ -131,8 +108,7 @@ export class ProfileController {
 	@ApiQuery({
 		name: 'profile',
 		required: false,
-		description:
-			'Used to check if the profiles returned are followers or follows of the requestor profile.',
+		description: 'Used to check if the profiles returned are followers or follows of the requestor profile.',
 	})
 	public getFollowers(
 		@Param('id') profileId: string,
@@ -140,21 +116,15 @@ export class ProfileController {
 	): Observable<ProfileRes[]> {
 		return this.profileService.getFollowers(profileId).pipe(
 			tap((followers) => {
-				if (!followers) {
-					throw new NotFoundException();
-				}
+				if (!followers) throw new NotFoundException();
 			}),
 			map((profiles) =>
 				profiles.map((profile) =>
 					fromProfile
 						? new ProfileRes(
 								profile,
-								profile.followers
-									.map((el) => el.toHexString())
-									.indexOf(fromProfile) !== -1,
-								profile.following
-									.map((el) => el.toHexString())
-									.indexOf(fromProfile) !== -1,
+								includesProfile(profile.followers, fromProfile),
+								includesProfile(profile.following, fromProfile),
 						  )
 						: new ProfileRes(profile),
 				),
@@ -166,8 +136,7 @@ export class ProfileController {
 	@ApiQuery({
 		name: 'profile',
 		required: false,
-		description:
-			'Used to check if the profiles returned are followers or follows the requestor profile.',
+		description: 'Used to check if the profiles returned are followers or follows the requestor profile.',
 	})
 	public getFollowing(
 		@Param('id') profileId: string,
@@ -175,21 +144,15 @@ export class ProfileController {
 	): Observable<ProfileRes[]> {
 		return this.profileService.getFollowing(profileId).pipe(
 			tap((following) => {
-				if (!following) {
-					throw new NotFoundException();
-				}
+				if (!following) throw new NotFoundException();
 			}),
 			map((profiles) =>
 				profiles.map((profile) =>
 					fromProfile
 						? new ProfileRes(
 								profile,
-								profile.followers
-									.map((el) => el.toHexString())
-									.indexOf(fromProfile) !== -1,
-								profile.following
-									.map((el) => el.toHexString())
-									.indexOf(fromProfile) !== -1,
+								includesProfile(profile.followers, fromProfile),
+								includesProfile(profile.following, fromProfile),
 						  )
 						: new ProfileRes(profile),
 				),
@@ -210,12 +173,7 @@ export class ProfileController {
 
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(follower) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, follower)) throw new ForbiddenException();
 
 				return this.profileService.follow(profile, follower);
 			}),
@@ -235,12 +193,7 @@ export class ProfileController {
 
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(unfollower) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, unfollower)) throw new ForbiddenException();
 
 				return this.profileService.unfollow(profile, unfollower);
 			}),
@@ -255,18 +208,11 @@ export class ProfileController {
 	): Observable<PostRes[]> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
-				if (
-					user.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profileId) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(user, profileId)) throw new ForbiddenException();
 
 				return this.profileService.getFollowingIds(profileId);
 			}),
-			mergeMap((followingIds) =>
-				this.postService.getByProfile([...followingIds, profileId]),
-			),
+			mergeMap((followingIds) => this.postService.getByProfile([...followingIds, profileId])),
 			map((posts) => posts.map((post) => new PostRes(post))),
 		);
 	}

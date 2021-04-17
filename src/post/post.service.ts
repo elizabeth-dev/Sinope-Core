@@ -39,9 +39,7 @@ export class PostService {
 			this.postModel
 				.find({
 					profile: {
-						$in: profile.map((profileId) =>
-							Types.ObjectId(profileId),
-						),
+						$in: profile.map((profileId) => Types.ObjectId(profileId)),
 					},
 				})
 				.sort({ date: -1 })
@@ -49,10 +47,7 @@ export class PostService {
 		);
 	}
 
-	public add(
-		{ question, profile, ...newPost }: CreatePostReq,
-		user: string,
-	): Observable<PostEntity> {
+	public add({ question, profile, ...newPost }: CreatePostReq, user: string): Observable<PostEntity> {
 		return from(
 			this.postModel.create({
 				...newPost,
@@ -65,11 +60,7 @@ export class PostService {
 			}),
 		).pipe(
 			mergeMap((post) =>
-				question
-					? this.questionService
-							.answer(question, post.id)
-							.pipe(mapTo(post))
-					: of(post),
+				question ? this.questionService.answer(question, post.id).pipe(mapTo(post)) : of(post),
 			),
 		);
 	}
@@ -83,13 +74,7 @@ export class PostService {
 	}
 
 	public getLikes(post: string): Observable<ProfileEntity[]> {
-		return from(
-			this.postModel
-				.findById(post)
-				.populate('likes')
-				.select('likes')
-				.exec(),
-		).pipe(
+		return from(this.postModel.findById(post).populate('likes').select('likes').exec()).pipe(
 			map((post: PostEntity & { likes: ProfileEntity[] }) => post.likes),
 		);
 	}
@@ -144,10 +129,6 @@ export class PostService {
 
 	public search(searchTerm: string): Observable<PostEntity[]> {
 		// FIXME: Unvalidated user input
-		return from(
-			this.postModel
-				.find({ content: new RegExp(`${searchTerm}`, 'i') })
-				.exec(),
-		);
+		return from(this.postModel.find({ content: new RegExp(`${searchTerm}`, 'i') }).exec());
 	}
 }

@@ -41,13 +41,8 @@ export class UserService {
 		);
 	}
 
-	public update(
-		id: string,
-		partial: UpdateQuery<UserEntity>,
-	): Observable<UserEntity> {
-		return from(
-			this.userModel.findByIdAndUpdate(id, partial, { new: true }).exec(),
-		);
+	public update(id: string, partial: UpdateQuery<UserEntity>): Observable<UserEntity> {
+		return from(this.userModel.findByIdAndUpdate(id, partial, { new: true }).exec());
 	}
 
 	public delete(id: string): Observable<void> {
@@ -61,11 +56,7 @@ export class UserService {
 	public addProfile(id: string, profile: string): Observable<UserEntity> {
 		return from(
 			this.userModel
-				.findByIdAndUpdate(
-					id,
-					{ $addToSet: { profiles: Types.ObjectId(profile) } },
-					{ new: true },
-				)
+				.findByIdAndUpdate(id, { $addToSet: { profiles: Types.ObjectId(profile) } }, { new: true })
 				.exec(),
 		);
 	}
@@ -91,11 +82,7 @@ export class UserService {
 
 		return from(
 			this.userModel
-				.updateMany(
-					{ profiles: exProfileId },
-					{ $pull: { profiles: exProfileId } },
-					{ new: true },
-				)
+				.updateMany({ profiles: exProfileId }, { $pull: { profiles: exProfileId } }, { new: true })
 				.exec(),
 		).pipe(
 			map(() => {

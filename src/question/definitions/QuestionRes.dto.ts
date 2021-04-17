@@ -45,9 +45,7 @@ export class QuestionRes {
 		if (this.anonymous === false) {
 			if (questionEntity.from && questionEntity.populated('from')) {
 				this.fromId = ((questionEntity.from as unknown) as ProfileEntity)._id;
-				this.from = new ProfileRes(
-					(questionEntity.from as unknown) as ProfileEntity,
-				);
+				this.from = new ProfileRes((questionEntity.from as unknown) as ProfileEntity);
 			} else {
 				this.fromId = questionEntity.from.toHexString();
 			}
@@ -55,18 +53,14 @@ export class QuestionRes {
 
 		if (questionEntity.recipient && questionEntity.populated('recipient')) {
 			this.recipientId = ((questionEntity.recipient as unknown) as ProfileEntity)._id;
-			this.recipient = new ProfileRes(
-				(questionEntity.recipient as unknown) as ProfileEntity,
-			);
+			this.recipient = new ProfileRes((questionEntity.recipient as unknown) as ProfileEntity);
 		} else {
 			this.recipientId = questionEntity.recipient.toHexString();
 		}
 
 		if (questionEntity.answer && questionEntity.populated('answer')) {
 			this.answerId = ((questionEntity.answer as unknown) as PostEntity)._id;
-			this.answer = new PostRes(
-				(questionEntity.answer as unknown) as PostEntity,
-			);
+			this.answer = new PostRes((questionEntity.answer as unknown) as PostEntity);
 		} else {
 			this.answerId = questionEntity.answer.toHexString();
 		}

@@ -1,13 +1,4 @@
-import {
-	Controller,
-	Delete,
-	ForbiddenException,
-	Get,
-	HttpCode,
-	Param,
-	Put,
-	UseGuards,
-} from '@nestjs/common';
+import { Controller, Delete, ForbiddenException, Get, HttpCode, Param, Put, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { ReqUser } from '../shared/decorators/user.decorator';
@@ -16,6 +7,7 @@ import { UserService } from './user.service';
 import { map, mergeMap } from 'rxjs/operators';
 import { ApiTags } from '@nestjs/swagger';
 import { UserRes } from './definitions/UserRes.dto';
+import { checkPerms } from 'src/shared/utils/user.utils';
 
 @ApiTags('User controller')
 @Controller('users')
@@ -24,9 +16,7 @@ export class UserController {
 
 	@Get('self')
 	@UseGuards(AuthGuard('bearer'))
-	public getSelf(
-		@ReqUser() user$: Observable<UserEntity>,
-	): Observable<UserRes> {
+	public getSelf(@ReqUser() user$: Observable<UserEntity>): Observable<UserRes> {
 		return user$.pipe(
 			mergeMap((user) => this.userService.get(user.id)),
 			map((user) => new UserRes(user)),
@@ -41,10 +31,7 @@ export class UserController {
 	@Delete(':id')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
-	public delete(
-		@Param('id') id: string,
-		@ReqUser() reqUser$: Observable<UserEntity>,
-	): Observable<void> {
+	public delete(@Param('id') id: string, @ReqUser() reqUser$: Observable<UserEntity>): Observable<void> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (user.id !== id) throw new ForbiddenException();
@@ -63,12 +50,7 @@ export class UserController {
 	): Observable<UserRes> {
 		return reqUser$.pipe(
 			mergeMap((reqUser) => {
-				if (
-					reqUser.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profile) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(reqUser, profile)) throw new ForbiddenException();
 
 				return this.userService.addProfile(user, profile);
 			}),
@@ -85,12 +67,7 @@ export class UserController {
 	): Observable<void> {
 		return reqUser$.pipe(
 			mergeMap((reqUser) => {
-				if (
-					reqUser.profiles
-						.map((el) => el.toHexString())
-						.indexOf(profile) === -1
-				)
-					throw new ForbiddenException();
+				if (checkPerms(reqUser, profile)) throw new ForbiddenException();
 
 				return this.userService.removeProfile(user, profile);
 			}),

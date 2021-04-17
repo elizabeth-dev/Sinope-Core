@@ -29,22 +29,14 @@ export class ProfileRes {
 	@ApiProperty()
 	public followingMe?: boolean;
 
-	constructor(
-		profileEntity: ProfileEntity,
-		followingThem?: boolean,
-		followingMe?: boolean,
-	) {
+	constructor(profileEntity: ProfileEntity, followingThem?: boolean, followingMe?: boolean) {
 		this.id = profileEntity._id;
 		this.tag = profileEntity.tag;
 		this.name = profileEntity.name;
 		this.description = profileEntity.description;
 		this.created = profileEntity.created;
-		this.followingIds = profileEntity.following.map((el) =>
-			el.toHexString(),
-		);
-		this.followerIds = profileEntity.followers.map((el) =>
-			el.toHexString(),
-		);
+		this.followingIds = profileEntity.following.map((el) => el.toHexString());
+		this.followerIds = profileEntity.followers.map((el) => el.toHexString());
 		this.followingMe = followingMe;
 		this.followingThem = followingThem;
 	}

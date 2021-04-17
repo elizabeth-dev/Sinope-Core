@@ -23,10 +23,7 @@ export class AuthService {
 		private readonly accessTokenModel: Model<AccessTokenEntity>,
 	) {}
 
-	public validateUser(
-		email: string,
-		password: string,
-	): Observable<UserEntity | null> {
+	public validateUser(email: string, password: string): Observable<UserEntity | null> {
 		return this.userService.getByEmail(email).pipe(
 			switchMap((user) => {
 				if (!user) return of(null);
@@ -43,9 +40,7 @@ export class AuthService {
 			(this.accessTokenModel
 				.findOneAndUpdate({ accessToken }, { lastAccess: new Date() })
 				.populate('user')
-				.exec() as unknown) as Promise<
-				Omit<AccessTokenEntity, 'user'> & { user: UserEntity }
-			>,
+				.exec() as unknown) as Promise<Omit<AccessTokenEntity, 'user'> & { user: UserEntity }>,
 		).pipe(
 			map(
 				(
@@ -53,8 +48,7 @@ export class AuthService {
 						user: UserEntity;
 					},
 				) => {
-					if (!token || token.expiresAt.getTime() <= Date.now())
-						return null;
+					if (!token || token.expiresAt.getTime() <= Date.now()) return null;
 
 					return token.user;
 				},
@@ -62,10 +56,7 @@ export class AuthService {
 		);
 	}
 
-	public genAccessToken(
-		user: string,
-		refreshToken: string,
-	): Observable<AccessTokenEntity> {
+	public genAccessToken(user: string, refreshToken: string): Observable<AccessTokenEntity> {
 		const accessToken = uuidv4();
 
 		return from(
@@ -94,14 +85,9 @@ export class AuthService {
 
 		return from(
 			(this.refreshTokenModel
-				.findOneAndUpdate(
-					{ refreshToken: oldRefreshToken },
-					{ refreshToken },
-				)
+				.findOneAndUpdate({ refreshToken: oldRefreshToken }, { refreshToken })
 				.populate('user')
-				.exec() as unknown) as Promise<
-				Omit<RefreshTokenEntity, 'user'> & { user: UserEntity }
-			>,
+				.exec() as unknown) as Promise<Omit<RefreshTokenEntity, 'user'> & { user: UserEntity }>,
 		).pipe(
 			mergeMap(
 				(
@@ -110,8 +96,7 @@ export class AuthService {
 					},
 				) => {
 					// TODO: Check token substitution before checking if user exists [security]
-					if (!tokenEntry || !tokenEntry.user)
-						throw new UnauthorizedException();
+					if (!tokenEntry || !tokenEntry.user) throw new UnauthorizedException();
 
 					const { id: sub } = tokenEntry.user;
 

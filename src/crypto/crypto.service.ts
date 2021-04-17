@@ -5,17 +5,13 @@ import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class CryptoService {
-	constructor(private readonly config: ConfigService) {
-	}
+	constructor(private readonly config: ConfigService) {}
 
 	public hash(password: string): Observable<string> {
 		return from(bcrypt.hash(password, this.config.cryptoConfig.saltRounds));
 	}
 
-	public compareHash(
-		password: string,
-		hash: string,
-	): Observable<boolean> {
+	public compareHash(password: string, hash: string): Observable<boolean> {
 		return from(bcrypt.compare(password, hash));
 	}
 }
