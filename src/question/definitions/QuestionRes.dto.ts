@@ -15,19 +15,19 @@ export class QuestionRes {
 	@ApiProperty()
 	public anonymous: boolean;
 
-	@ApiProperty()
+	@ApiProperty({ type: Date })
 	public date: Date;
 
 	@ApiProperty()
 	public fromId?: string;
 
-	@ApiProperty()
+	@ApiProperty({ type: ProfileRes })
 	public from?: ProfileRes;
 
 	@ApiProperty()
 	public recipientId: string;
 
-	@ApiProperty()
+	@ApiProperty({ type: ProfileRes })
 	public recipient: ProfileRes;
 
 	@ApiProperty()

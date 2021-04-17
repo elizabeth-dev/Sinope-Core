@@ -14,7 +14,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { mergeMap, tap, map } from 'rxjs/operators';
 import { ProfileRes } from 'src/profile/definitions/ProfileRes.dto';
@@ -31,39 +31,79 @@ export class PostController {
 	constructor(private readonly postService: PostService) {}
 
 	@Get('')
-	public getPostsByProfile(@Query('profile') profile: string, @Query('type') type: string): Observable<PostRes[]> {
+	@ApiQuery({
+		name: 'profile',
+		required: true,
+		description: 'Profile to search posts from',
+	})
+	@ApiQuery({
+		name: 'type',
+		required: false,
+		enum: ['message', 'question'],
+		description: 'Select which type of posts return',
+	})
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
+	public getPostsByProfile(
+		@Query('profile') profile: string,
+		@Query('type') type: 'message' | 'question',
+		@Query('expand') expand: string[] | string,
+	): Observable<PostRes[]> {
 		if (!profile) throw new BadRequestException();
 
 		if (type) {
 			if (type === 'message')
 				return this.postService
-					.getMessages(profile)
+					.getMessages(profile, expand)
 					.pipe(map((posts) => posts.map((post) => new PostRes(post))));
+
 			if (type === 'question')
 				return this.postService
-					.getQuestions(profile)
+					.getQuestions(profile, expand)
 					.pipe(map((posts) => posts.map((post) => new PostRes(post))));
 		}
 
-		return this.postService.getByProfile(profile).pipe(map((posts) => posts.map((post) => new PostRes(post))));
+		return this.postService
+			.getByProfile(profile, expand)
+			.pipe(map((posts) => posts.map((post) => new PostRes(post))));
 	}
 
 	@Post('')
 	@UseGuards(AuthGuard('bearer'))
-	public addPost(@Body() newPost: CreatePostReq, @ReqUser() reqUser$: Observable<UserEntity>): Observable<PostRes> {
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
+	public addPost(
+		@Body() newPost: CreatePostReq,
+		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
+	): Observable<PostRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (checkPerms(user, newPost.profile)) throw new ForbiddenException();
 
-				return this.postService.add(newPost, user.id);
+				return this.postService.add(newPost, user.id, expand);
 			}),
 			map((post) => new PostRes(post)),
 		);
 	}
 
 	@Get(':id')
-	public getById(@Param('id') id: string): Observable<PostRes> {
-		return this.postService.get(id).pipe(
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
+	public getById(@Param('id') id: string, @Query('expand') expand: string[] | string): Observable<PostRes> {
+		return this.postService.get(id, expand).pipe(
 			tap((post) => {
 				if (!post) throw new NotFoundException();
 			}),
@@ -92,12 +132,18 @@ export class PostController {
 
 	@Get(':id/likes')
 	@UseGuards(AuthGuard('bearer'))
-	public getLikes(@Param('id') id: string): Observable<ProfileRes[]> {
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
+	public getLikes(@Param('id') id: string, @Query('expand') expand: string[] | string): Observable<ProfileRes[]> {
 		return this.postService.get(id).pipe(
 			mergeMap((post) => {
 				if (!post) throw new NotFoundException();
 
-				return this.postService.getLikes(id);
+				return this.postService.getLikes(id, expand);
 			}),
 			map((profiles) => profiles.map((profile) => new ProfileRes(profile))),
 		);
@@ -105,16 +151,23 @@ export class PostController {
 
 	@Put(':id/likes/:profileId')
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public like(
 		@Param('id') id: string,
 		@Param('profileId') profileId: string,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<PostRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (checkPerms(user, profileId)) throw new ForbiddenException();
 
-				return this.postService.like(id, profileId);
+				return this.postService.like(id, profileId, expand);
 			}),
 			tap((post) => {
 				if (!post) throw new NotFoundException();
@@ -125,16 +178,23 @@ export class PostController {
 
 	@Delete(':id/likes/:profileId')
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public unlike(
 		@Param('id') id: string,
 		@Param('profileId') profileId: string,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<PostRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (checkPerms(user, profileId)) throw new ForbiddenException();
 
-				return this.postService.unlike(id, profileId);
+				return this.postService.unlike(id, profileId, expand);
 			}),
 			tap((post) => {
 				if (!post) throw new NotFoundException();

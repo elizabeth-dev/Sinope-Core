@@ -10,7 +10,7 @@ export class UserRes {
 	@ApiProperty()
 	public email: string;
 
-	@ApiProperty()
+	@ApiProperty({ type: Date })
 	public created: Date;
 
 	@ApiProperty({ type: [String] })

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
+import { multiPopulate, multiPopulateDoc } from 'src/shared/utils/mongoose.utils';
 import { CreateQuestionReq } from './definitions/CreateQuestionReq.dto';
 import { QuestionEntity } from './question.schema';
 
@@ -13,23 +14,20 @@ export class QuestionService {
 		private readonly questionModel: Model<QuestionEntity>,
 	) {}
 
-	public get(): Observable<QuestionEntity[]>;
-	public get(id: string): Observable<QuestionEntity>;
-	public get(id?: string): Observable<QuestionEntity | QuestionEntity[]> {
-		if (!id) {
-			return from(this.questionModel.find().exec());
-		}
-
-		return from(this.questionModel.findById(id).exec());
+	public get(id: string, expand: string[] | string = []): Observable<QuestionEntity> {
+		return from(multiPopulate(this.questionModel.findById(id), expand).exec());
 	}
 
-	public getByProfile(profile: string): Observable<QuestionEntity[]> {
-		return from(this.questionModel.find({ recipient: Types.ObjectId(profile), answer: null }).exec());
+	public getByProfile(profile: string, expand: string[] | string = []): Observable<QuestionEntity[]> {
+		return from(
+			multiPopulate(this.questionModel.find({ recipient: Types.ObjectId(profile), answer: null }), expand).exec(),
+		);
 	}
 
 	public add(
 		{ from: profile, recipient, ...newQuestion }: CreateQuestionReq,
 		user: string,
+		expand: string[] | string = [],
 	): Observable<QuestionEntity> {
 		return from(
 			this.questionModel.create({
@@ -38,7 +36,7 @@ export class QuestionService {
 				from: Types.ObjectId(profile),
 				recipient: Types.ObjectId(recipient),
 			}),
-		);
+		).pipe(mergeMap((question) => multiPopulateDoc(question, expand).execPopulate()));
 	}
 
 	public delete(id: string): Observable<void> {

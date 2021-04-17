@@ -12,13 +12,13 @@ export class PostRes {
 	@ApiProperty()
 	public content: string;
 
-	@ApiProperty()
+	@ApiProperty({ type: Date })
 	public date: Date;
 
 	@ApiProperty()
 	public profileId: string;
 
-	@ApiProperty()
+	@ApiProperty({ type: ProfileRes })
 	public profile?: ProfileRes;
 
 	@ApiProperty({ type: [String] })
@@ -52,11 +52,13 @@ export class PostRes {
 			this.likeIds = postEntity.likes.map((el) => el.toHexString());
 		}
 
-		if (postEntity.question && postEntity.populated('question')) {
-			this.questionId = ((postEntity.question as unknown) as QuestionEntity)._id;
-			this.question = new QuestionRes((postEntity.question as unknown) as QuestionEntity);
-		} else {
-			this.questionId = postEntity.question.toHexString();
+		if (postEntity.question) {
+			if (postEntity.populated('question')) {
+				this.questionId = ((postEntity.question as unknown) as QuestionEntity)._id;
+				this.question = new QuestionRes((postEntity.question as unknown) as QuestionEntity);
+			} else {
+				this.questionId = postEntity.question.toHexString();
+			}
 		}
 	}
 }

@@ -7,6 +7,7 @@ import { QuestionService } from '../question/question.service';
 import { CreatePostReq } from './definitions/CreatePostReq.dto';
 import { PostEntity } from './post.schema';
 import { ProfileEntity } from '../profile/profile.schema';
+import { multiPopulate, multiPopulateDoc } from 'src/shared/utils/mongoose.utils';
 
 @Injectable()
 export class PostService {
@@ -16,38 +17,38 @@ export class PostService {
 		private readonly questionService: QuestionService,
 	) {}
 
-	public get(): Observable<PostEntity[]>;
-	public get(id: string): Observable<PostEntity>;
-	public get(id?: string): Observable<PostEntity | PostEntity[]> {
-		if (!id) {
-			return from(this.postModel.find().exec());
-		}
-
-		return from(this.postModel.findById(id).exec());
+	public get(id: string, expand: string[] | string = []): Observable<PostEntity> {
+		return from(multiPopulate(this.postModel.findById(id), expand).exec());
 	}
 
-	public getByProfile(profile: string | string[]): Observable<PostEntity[]> {
-		if (typeof profile === 'string')
-			return from(
-				this.postModel
-					.find({ profile: Types.ObjectId(profile) })
-					.sort({ date: -1 })
-					.exec(),
-			);
-
+	public getByProfileList(profiles: string[], expand: string[] | string = []): Observable<PostEntity[]> {
 		return from(
-			this.postModel
-				.find({
+			multiPopulate(
+				this.postModel.find({
 					profile: {
-						$in: profile.map((profileId) => Types.ObjectId(profileId)),
+						$in: profiles.map((profileId) => Types.ObjectId(profileId)),
 					},
-				})
+				}),
+				expand,
+			)
 				.sort({ date: -1 })
 				.exec(),
 		);
 	}
 
-	public add({ question, profile, ...newPost }: CreatePostReq, user: string): Observable<PostEntity> {
+	public getByProfile(profile: string, expand: string[] | string = []): Observable<PostEntity[]> {
+		return from(
+			multiPopulate(this.postModel.find({ profile: Types.ObjectId(profile) }), expand)
+				.sort({ date: -1 })
+				.exec(),
+		);
+	}
+
+	public add(
+		{ question, profile, ...newPost }: CreatePostReq,
+		user: string,
+		expand: string[] | string = [],
+	): Observable<PostEntity> {
 		return from(
 			this.postModel.create({
 				...newPost,
@@ -59,6 +60,7 @@ export class PostService {
 				}),
 			}),
 		).pipe(
+			mergeMap((post) => multiPopulateDoc(post, expand).execPopulate()),
 			mergeMap((post) =>
 				question ? this.questionService.answer(question, post.id).pipe(mapTo(post)) : of(post),
 			),
@@ -73,62 +75,69 @@ export class PostService {
 		);
 	}
 
-	public getLikes(post: string): Observable<ProfileEntity[]> {
-		return from(this.postModel.findById(post).populate('likes').select('likes').exec()).pipe(
-			map((post: PostEntity & { likes: ProfileEntity[] }) => post.likes),
-		);
+	public getLikes(post: string, expand: string[] | string = []): Observable<ProfileEntity[]> {
+		return from(
+			// FIXME: Check user input from expand overriding "likes" populate (as the likes populate is the first done, the user expand takes preference, potential undesired behavior injection)
+			multiPopulate(this.postModel.findById(post).populate('likes'), expand, 'likes').select('likes').exec(),
+		).pipe(map((post: PostEntity & { likes: ProfileEntity[] }) => post.likes));
 	}
 
-	public like(post: string, profile: string): Observable<PostEntity> {
+	public like(post: string, profile: string, expand: string[] | string = []): Observable<PostEntity> {
 		return from(
-			this.postModel
-				.findByIdAndUpdate(
+			multiPopulate(
+				this.postModel.findByIdAndUpdate(
 					post,
 					{
 						$addToSet: { likes: Types.ObjectId(profile) },
 					},
 					{ new: true },
-				)
-				.exec(),
+				),
+				expand,
+			).exec(),
 		);
 	}
 
-	public unlike(post: string, profile: string): Observable<PostEntity> {
+	public unlike(post: string, profile: string, expand: string[] | string = []): Observable<PostEntity> {
 		return from(
-			this.postModel
-				.findByIdAndUpdate(
+			multiPopulate(
+				this.postModel.findByIdAndUpdate(
 					post,
 					{
 						$pull: { likes: Types.ObjectId(profile) },
 					},
 					{ new: true },
-				)
-				.exec(),
+				),
+				expand,
+			).exec(),
 		);
 	}
 
-	public getMessages(profile: string): Observable<PostEntity[]> {
+	public getMessages(profile: string, expand: string[] | string = []): Observable<PostEntity[]> {
 		return from(
-			this.postModel
-				.find({
+			multiPopulate(
+				this.postModel.find({
 					profile: Types.ObjectId(profile),
 					question: null,
-				})
-				.exec(),
+				}),
+				expand,
+			).exec(),
 		);
 	}
 
-	public getQuestions(profile: string): Observable<PostEntity[]> {
+	public getQuestions(profile: string, expand: string[] | string = []): Observable<PostEntity[]> {
 		return from(
-			this.postModel.find({
-				profile: Types.ObjectId(profile),
-				question: { $exists: true },
-			}),
+			multiPopulate(
+				this.postModel.find({
+					profile: Types.ObjectId(profile),
+					question: { $exists: true },
+				}),
+				expand,
+			).exec(),
 		);
 	}
 
-	public search(searchTerm: string): Observable<PostEntity[]> {
+	public search(searchTerm: string, expand: string[] | string = []): Observable<PostEntity[]> {
 		// FIXME: Unvalidated user input
-		return from(this.postModel.find({ content: new RegExp(`${searchTerm}`, 'i') }).exec());
+		return from(multiPopulate(this.postModel.find({ content: new RegExp(`${searchTerm}`, 'i') }), expand).exec());
 	}
 }

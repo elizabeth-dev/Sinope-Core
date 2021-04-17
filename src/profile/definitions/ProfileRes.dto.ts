@@ -14,14 +14,20 @@ export class ProfileRes {
 	@ApiProperty()
 	public description: string;
 
-	@ApiProperty()
+	@ApiProperty({ type: Date })
 	public created: Date;
 
 	@ApiProperty({ type: [String] })
 	public followingIds: string[];
 
+	@ApiProperty({ type: [ProfileRes] })
+	public following: ProfileRes[];
+
 	@ApiProperty({ type: [String] })
 	public followerIds: string[];
+
+	@ApiProperty({ type: [ProfileRes] })
+	public followers: ProfileRes[];
 
 	@ApiProperty()
 	public followingThem?: boolean;
@@ -35,8 +41,21 @@ export class ProfileRes {
 		this.name = profileEntity.name;
 		this.description = profileEntity.description;
 		this.created = profileEntity.created;
-		this.followingIds = profileEntity.following.map((el) => el.toHexString());
-		this.followerIds = profileEntity.followers.map((el) => el.toHexString());
+
+		if (profileEntity.following && profileEntity.populated('following')) {
+			this.followingIds = ((profileEntity.following as unknown) as ProfileEntity[]).map((el) => el._id);
+			this.following = ((profileEntity.following as unknown) as ProfileEntity[]).map((el) => new ProfileRes(el));
+		} else {
+			this.followingIds = profileEntity.following.map((el) => el.toHexString());
+		}
+
+		if (profileEntity.followers && profileEntity.populated('followers')) {
+			this.followerIds = ((profileEntity.followers as unknown) as ProfileEntity[]).map((el) => el._id);
+			this.followers = ((profileEntity.followers as unknown) as ProfileEntity[]).map((el) => new ProfileRes(el));
+		} else {
+			this.followerIds = profileEntity.followers.map((el) => el.toHexString());
+		}
+
 		this.followingMe = followingMe;
 		this.followingThem = followingThem;
 	}

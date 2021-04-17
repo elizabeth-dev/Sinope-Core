@@ -6,6 +6,7 @@ import { map, mapTo, mergeMap } from 'rxjs/operators';
 import { CreateProfileReq } from './definitions/CreateProfileReq.dto';
 import { ProfileEntity } from './profile.schema';
 import { UserService } from '../user/user.service';
+import { multiPopulate, multiPopulateDoc } from 'src/shared/utils/mongoose.utils';
 
 @Injectable()
 export class ProfileService {
@@ -15,18 +16,25 @@ export class ProfileService {
 		private readonly userService: UserService,
 	) {}
 
-	public get(id: string): Observable<ProfileEntity> {
-		return from(this.profileModel.findById(id).exec());
+	public get(id: string, expand: string[] | string = []): Observable<ProfileEntity> {
+		return from(multiPopulate(this.profileModel.findById(id), expand).exec());
 	}
 
-	public create(newProfile: CreateProfileReq, user: string): Observable<ProfileEntity> {
+	public create(
+		newProfile: CreateProfileReq,
+		user: string,
+		expand: string[] | string = [],
+	): Observable<ProfileEntity> {
 		return from(
 			this.profileModel.create({
 				...newProfile,
 				following: [],
 				followers: [],
 			}),
-		).pipe(mergeMap((profile) => this.userService.addProfile(user, profile.id).pipe(mapTo(profile))));
+		).pipe(
+			mergeMap((profile) => multiPopulateDoc(profile, expand).execPopulate()),
+			mergeMap((profile) => this.userService.addProfile(user, profile.id).pipe(mapTo(profile))),
+		);
 	}
 
 	public delete(id: string): Observable<ProfileEntity> {
@@ -35,20 +43,30 @@ export class ProfileService {
 		);
 	}
 
-	public update(id: string, partial: UpdateQuery<ProfileEntity>): Observable<ProfileEntity> {
-		return from(this.profileModel.findByIdAndUpdate(id, partial, { new: true }));
+	public update(
+		id: string,
+		partial: UpdateQuery<ProfileEntity>,
+		expand: string[] | string = [],
+	): Observable<ProfileEntity> {
+		return from(multiPopulate(this.profileModel.findByIdAndUpdate(id, partial, { new: true }), expand));
 	}
 
-	public getFollowers(id: string): Observable<ProfileEntity[]> {
-		return from(this.profileModel.findById(id).populate('followers').exec()).pipe(
-			map((profile: ProfileEntity & { followers: ProfileEntity[] }) => profile.followers),
-		);
+	public getFollowers(id: string, expand: string[] | string = []): Observable<ProfileEntity[]> {
+		// FIXME: Check user input from expand overriding "likes" populate (as the likes populate is the first done, the user expand takes preference, potential undesired behavior injection)
+		return from(
+			multiPopulate(this.profileModel.findById(id).populate('followers'), expand, 'followers')
+				.select('followers')
+				.exec(),
+		).pipe(map((profile: ProfileEntity & { followers: ProfileEntity[] }) => profile.followers));
 	}
 
-	public getFollowing(id: string): Observable<ProfileEntity[]> {
-		return from(this.profileModel.findById(id).populate('following').exec()).pipe(
-			map((profile: ProfileEntity & { following: ProfileEntity[] }) => profile.following),
-		);
+	public getFollowing(id: string, expand: string[] | string = []): Observable<ProfileEntity[]> {
+		// FIXME: Check user input from expand overriding "likes" populate (as the likes populate is the first done, the user expand takes preference, potential undesired behavior injection)
+		return from(
+			multiPopulate(this.profileModel.findById(id).populate('following'), expand, 'following')
+				.select('following')
+				.exec(),
+		).pipe(map((profile: ProfileEntity & { following: ProfileEntity[] }) => profile.following));
 	}
 
 	public getFollowingIds(id: string): Observable<string[]> {
@@ -58,10 +76,10 @@ export class ProfileService {
 	}
 
 	public follow(id: string, follower: string): Observable<void> {
-		return combineLatest(
+		return combineLatest([
 			from(this.profileModel.updateOne({ _id: id }, { $push: { followers: Types.ObjectId(follower) } })),
 			from(this.profileModel.updateOne({ _id: follower }, { $push: { following: Types.ObjectId(id) } })),
-		).pipe(
+		]).pipe(
 			map(() => {
 				return;
 			}),
@@ -69,24 +87,25 @@ export class ProfileService {
 	}
 
 	public unfollow(id: string, unfollower: string): Observable<void> {
-		return combineLatest(
+		return combineLatest([
 			from(this.profileModel.updateOne({ _id: id }, { $pull: { followers: Types.ObjectId(unfollower) } })),
 			from(this.profileModel.updateOne({ _id: unfollower }, { $pull: { following: Types.ObjectId(id) } })),
-		).pipe(
+		]).pipe(
 			map(() => {
 				return;
 			}),
 		);
 	}
 
-	public search(searchTerm: string): Observable<ProfileEntity[]> {
+	public search(searchTerm: string, expand: string[] | string = []): Observable<ProfileEntity[]> {
 		// FIXME: Unvalidated user input
 		return from(
-			this.profileModel
-				.find({
+			multiPopulate(
+				this.profileModel.find({
 					$or: [{ name: new RegExp(`${searchTerm}`, 'i') }, { tag: new RegExp(`${searchTerm}`, 'i') }],
-				})
-				.exec(),
+				}),
+				expand,
+			).exec(),
 		);
 	}
 }

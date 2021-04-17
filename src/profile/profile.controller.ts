@@ -40,8 +40,18 @@ export class ProfileController {
 		required: false,
 		description: 'Used to check if the profiles returned are followers or follows of the requestor profile.',
 	})
-	public get(@Param('id') id: string, @Query('profile') fromProfile?: string): Observable<ProfileRes> {
-		return this.profileService.get(id).pipe(
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
+	public get(
+		@Param('id') id: string,
+		@Query('expand') expand: string[] | string,
+		@Query('profile') fromProfile?: string,
+	): Observable<ProfileRes> {
+		return this.profileService.get(id, expand).pipe(
 			tap((profile) => {
 				if (!profile) throw new NotFoundException();
 			}),
@@ -59,12 +69,19 @@ export class ProfileController {
 
 	@Post()
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public create(
 		@Body() newProfile: CreateProfileReq,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<ProfileRes> {
 		return reqUser$.pipe(
-			mergeMap((user) => this.profileService.create(newProfile, user.id)),
+			mergeMap((user) => this.profileService.create(newProfile, user.id, expand)),
 			map((profile) => new ProfileRes(profile)),
 		);
 	}
@@ -89,16 +106,23 @@ export class ProfileController {
 
 	@Patch(':id')
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public update(
 		@Param('id') profile: string,
 		@Body() partial: UpdateProfileReq,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<ProfileRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (checkPerms(user, profile)) throw new ForbiddenException();
 
-				return this.profileService.update(profile, partial);
+				return this.profileService.update(profile, partial, expand);
 			}),
 			map((profile) => new ProfileRes(profile)),
 		);
@@ -110,11 +134,18 @@ export class ProfileController {
 		required: false,
 		description: 'Used to check if the profiles returned are followers or follows of the requestor profile.',
 	})
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public getFollowers(
 		@Param('id') profileId: string,
+		@Query('expand') expand: string[] | string,
 		@Query('profile') fromProfile?: string,
 	): Observable<ProfileRes[]> {
-		return this.profileService.getFollowers(profileId).pipe(
+		return this.profileService.getFollowers(profileId, expand).pipe(
 			tap((followers) => {
 				if (!followers) throw new NotFoundException();
 			}),
@@ -138,11 +169,18 @@ export class ProfileController {
 		required: false,
 		description: 'Used to check if the profiles returned are followers or follows the requestor profile.',
 	})
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public getFollowing(
 		@Param('id') profileId: string,
+		@Query('expand') expand: string[] | string,
 		@Query('profile') fromProfile?: string,
 	): Observable<ProfileRes[]> {
-		return this.profileService.getFollowing(profileId).pipe(
+		return this.profileService.getFollowing(profileId, expand).pipe(
 			tap((following) => {
 				if (!following) throw new NotFoundException();
 			}),
@@ -202,9 +240,16 @@ export class ProfileController {
 
 	@Get(':id/timeline')
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public timeline(
 		@Param('id') profileId: string,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<PostRes[]> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
@@ -212,7 +257,7 @@ export class ProfileController {
 
 				return this.profileService.getFollowingIds(profileId);
 			}),
-			mergeMap((followingIds) => this.postService.getByProfile([...followingIds, profileId])),
+			mergeMap((followingIds) => this.postService.getByProfileList([...followingIds, profileId], expand)),
 			map((posts) => posts.map((post) => new PostRes(post))),
 		);
 	}

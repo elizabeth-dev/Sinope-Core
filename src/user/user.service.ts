@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import { from, Observable } from 'rxjs';
 import { map, mergeMap } from 'rxjs/operators';
+import { multiPopulate, multiPopulateDoc } from 'src/shared/utils/mongoose.utils';
 import { CryptoService } from '../crypto/crypto.service';
 import { CreateUserReq } from './definitions/CreateUserReq.dto';
 import { UserEntity } from './user.schema';
@@ -15,21 +16,15 @@ export class UserService {
 		private readonly cryptoService: CryptoService,
 	) {}
 
-	public get(): Observable<UserEntity[]>;
-	public get(id: string): Observable<UserEntity>;
-	public get(id?: string): Observable<UserEntity | UserEntity[]> {
-		if (!id) {
-			return from(this.userModel.find().populate('profiles').exec());
-		}
-
-		return from(this.userModel.findById(id).populate('profiles').exec());
+	public get(id: string, expand: string[] | string = []): Observable<UserEntity> {
+		return from(multiPopulate(this.userModel.findById(id), expand).exec());
 	}
 
 	public getByEmail(email: string): Observable<UserEntity> {
 		return from(this.userModel.findOne({ email }).exec());
 	}
 
-	public add(newUser: CreateUserReq): Observable<UserEntity> {
+	public add(newUser: CreateUserReq, expand: string[] | string = []): Observable<UserEntity> {
 		return this.cryptoService.hash(newUser.password).pipe(
 			mergeMap((password) =>
 				this.userModel.create({
@@ -38,11 +33,16 @@ export class UserService {
 					profiles: [],
 				}),
 			),
+			mergeMap((user) => multiPopulateDoc(user, expand).execPopulate()),
 		);
 	}
 
-	public update(id: string, partial: UpdateQuery<UserEntity>): Observable<UserEntity> {
-		return from(this.userModel.findByIdAndUpdate(id, partial, { new: true }).exec());
+	public update(
+		id: string,
+		partial: UpdateQuery<UserEntity>,
+		expand: string[] | string = [],
+	): Observable<UserEntity> {
+		return from(multiPopulate(this.userModel.findByIdAndUpdate(id, partial, { new: true }), expand).exec());
 	}
 
 	public delete(id: string): Observable<void> {
@@ -53,11 +53,16 @@ export class UserService {
 		);
 	}
 
-	public addProfile(id: string, profile: string): Observable<UserEntity> {
+	public addProfile(id: string, profile: string, expand: string[] | string = []): Observable<UserEntity> {
 		return from(
-			this.userModel
-				.findByIdAndUpdate(id, { $addToSet: { profiles: Types.ObjectId(profile) } }, { new: true })
-				.exec(),
+			multiPopulate(
+				this.userModel.findByIdAndUpdate(
+					id,
+					{ $addToSet: { profiles: Types.ObjectId(profile) } },
+					{ new: true },
+				),
+				expand,
+			).exec(),
 		);
 	}
 

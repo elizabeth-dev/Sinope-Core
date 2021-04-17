@@ -13,7 +13,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { forkJoin, Observable } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
 import { checkPerms } from 'src/shared/utils/user.utils';
@@ -30,9 +30,16 @@ export class QuestionController {
 
 	@Get('')
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public getReceivedQuestions(
 		@Query('profile') profile: string,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<QuestionRes[]> {
 		if (!profile) throw new BadRequestException();
 
@@ -40,7 +47,7 @@ export class QuestionController {
 			mergeMap((user) => {
 				if (checkPerms(user, profile)) throw new ForbiddenException();
 
-				return this.questionService.getByProfile(profile);
+				return this.questionService.getByProfile(profile, expand);
 			}),
 			map((questions) => questions.map((question) => new QuestionRes(question))),
 		);
@@ -49,15 +56,22 @@ export class QuestionController {
 	@Post('')
 	@HttpCode(204)
 	@UseGuards(AuthGuard('bearer'))
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
 	public sendQuestion(
 		@Body() newQuestion: CreateQuestionReq,
 		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
 	): Observable<QuestionRes> {
 		return reqUser$.pipe(
 			mergeMap((user) => {
 				if (checkPerms(user, newQuestion.from)) throw new ForbiddenException();
 
-				return this.questionService.add(newQuestion, user.id);
+				return this.questionService.add(newQuestion, user.id, expand);
 			}),
 			map((question) => new QuestionRes(question)),
 		);
@@ -65,8 +79,18 @@ export class QuestionController {
 
 	@Get(':id')
 	@UseGuards(AuthGuard('bearer'))
-	public getById(@Param('id') id: string, @ReqUser() reqUser$: Observable<UserEntity>): Observable<QuestionRes> {
-		return forkJoin([reqUser$, this.questionService.get(id)]).pipe(
+	@ApiQuery({
+		name: 'expand',
+		isArray: true,
+		required: false,
+		description: 'Select which fields should be expanded (populated) on the response',
+	})
+	public getById(
+		@Param('id') id: string,
+		@ReqUser() reqUser$: Observable<UserEntity>,
+		@Query('expand') expand: string[] | string,
+	): Observable<QuestionRes> {
+		return forkJoin([reqUser$, this.questionService.get(id, expand)]).pipe(
 			tap(([user, question]) => {
 				if (!question) throw new NotFoundException();
 
