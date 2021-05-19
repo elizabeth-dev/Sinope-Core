@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { includesProfile } from 'src/shared/utils/profile.utils';
 import { ProfileEntity } from '../profile.schema';
 
 export class ProfileRes {
@@ -35,7 +36,7 @@ export class ProfileRes {
 	@ApiProperty()
 	public followingMe?: boolean;
 
-	constructor(profileEntity: ProfileEntity, followingThem?: boolean, followingMe?: boolean) {
+	constructor(profileEntity: ProfileEntity, fromProfile?: string) {
 		this.id = profileEntity._id;
 		this.tag = profileEntity.tag;
 		this.name = profileEntity.name;
@@ -56,7 +57,7 @@ export class ProfileRes {
 			this.followerIds = profileEntity.followers.map((el) => el.toHexString());
 		}
 
-		this.followingMe = followingMe;
-		this.followingThem = followingThem;
+		this.followingMe = includesProfile(this.followingIds, fromProfile);
+		this.followingThem = includesProfile(this.followerIds, fromProfile);
 	}
 }

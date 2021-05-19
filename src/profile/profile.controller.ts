@@ -19,7 +19,6 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
 import { PostRes } from 'src/post/definitions/PostRes.dto';
-import { includesProfile } from 'src/shared/utils/profile.utils';
 import { checkPerms } from 'src/shared/utils/user.utils';
 import { PostService } from '../post/post.service';
 import { ReqUser } from '../shared/decorators/user.decorator';
@@ -55,15 +54,7 @@ export class ProfileController {
 			tap((profile) => {
 				if (!profile) throw new NotFoundException();
 			}),
-			map((profile) =>
-				fromProfile
-					? new ProfileRes(
-							profile,
-							includesProfile(profile.followers, fromProfile),
-							includesProfile(profile.following, fromProfile),
-					  )
-					: new ProfileRes(profile),
-			),
+			map((profile) => (fromProfile ? new ProfileRes(profile, fromProfile) : new ProfileRes(profile))),
 		);
 	}
 
@@ -151,13 +142,7 @@ export class ProfileController {
 			}),
 			map((profiles) =>
 				profiles.map((profile) =>
-					fromProfile
-						? new ProfileRes(
-								profile,
-								includesProfile(profile.followers, fromProfile),
-								includesProfile(profile.following, fromProfile),
-						  )
-						: new ProfileRes(profile),
+					fromProfile ? new ProfileRes(profile, fromProfile) : new ProfileRes(profile),
 				),
 			),
 		);
@@ -186,13 +171,7 @@ export class ProfileController {
 			}),
 			map((profiles) =>
 				profiles.map((profile) =>
-					fromProfile
-						? new ProfileRes(
-								profile,
-								includesProfile(profile.followers, fromProfile),
-								includesProfile(profile.following, fromProfile),
-						  )
-						: new ProfileRes(profile),
+					fromProfile ? new ProfileRes(profile, fromProfile) : new ProfileRes(profile),
 				),
 			),
 		);
