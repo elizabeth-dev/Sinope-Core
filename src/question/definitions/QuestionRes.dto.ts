@@ -28,7 +28,7 @@ export class QuestionRes {
 	public recipientId: string;
 
 	@ApiProperty({ type: ProfileRes })
-	public recipient: ProfileRes;
+	public recipient?: ProfileRes;
 
 	@ApiProperty()
 	public answerId?: string;
