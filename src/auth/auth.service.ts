@@ -9,7 +9,7 @@ import { CreateUserReq } from '../user/definitions/CreateUserReq.dto';
 import { UserEntity } from '../user/user.schema';
 import { UserService } from '../user/user.service';
 import { AccessTokenEntity } from './access-token.schema';
-import { TokenPair } from './interfaces/login.interface';
+import { TokenPairRes } from './definitions/TokenPairRes.dto';
 import { RefreshTokenEntity } from './refresh-token.schema';
 
 @Injectable()
@@ -62,7 +62,7 @@ export class AuthService {
 		return from(
 			this.accessTokenModel.create({
 				accessToken,
-				expiresAt: new Date(Date.now() + 15 * 60000),
+				expiresAt: new Date(Date.now() + 43200 * 60000),
 				user: Types.ObjectId(user),
 				refreshToken,
 			}),
@@ -80,7 +80,7 @@ export class AuthService {
 		).pipe(map(({ refreshToken }) => refreshToken));
 	}
 
-	public refreshAccessToken(oldRefreshToken: string): Observable<TokenPair> {
+	public refreshAccessToken(oldRefreshToken: string): Observable<TokenPairRes> {
 		const refreshToken = uuidv4();
 
 		return from(
@@ -112,7 +112,7 @@ export class AuthService {
 		);
 	}
 
-	public login({ id: sub }: UserEntity): Observable<TokenPair> {
+	public login({ id: sub }: UserEntity): Observable<TokenPairRes> {
 		return this.genRefreshToken(sub).pipe(
 			mergeMap((refreshToken) =>
 				this.genAccessToken(sub, refreshToken).pipe(
@@ -126,7 +126,7 @@ export class AuthService {
 		);
 	}
 
-	public register(newUser: CreateUserReq): Observable<TokenPair> {
+	public register(newUser: CreateUserReq): Observable<TokenPairRes> {
 		return this.userService.add(newUser).pipe(
 			mergeMap((user) =>
 				this.genRefreshToken(user.id).pipe(

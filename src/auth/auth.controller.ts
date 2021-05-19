@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Post, Req, UnauthorizedException, UseG
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
-import { TokenPair } from './interfaces/login.interface';
+import { TokenPairRes } from './definitions/TokenPairRes.dto';
 import { UserEntity } from '../user/user.schema';
 import { mergeMap } from 'rxjs/operators';
 import { CreateUserReq } from '../user/definitions/CreateUserReq.dto';
@@ -15,17 +15,17 @@ export class AuthController {
 
 	@Post('/login')
 	@UseGuards(AuthGuard('local'))
-	public login(@Req() req: Request & { user: Observable<UserEntity> }): Observable<TokenPair> {
+	public login(@Req() req: Request & { user: Observable<UserEntity> }): Observable<TokenPairRes> {
 		return req.user.pipe(mergeMap((user) => this.authService.login(user)));
 	}
 
 	@Post('/register')
-	public register(@Body() newUser: CreateUserReq): Observable<TokenPair> {
+	public register(@Body() newUser: CreateUserReq): Observable<TokenPairRes> {
 		return this.authService.register(newUser);
 	}
 
 	@Post('/refreshToken')
-	public refreshToken(@Body() body: { refreshToken: string }): Observable<TokenPair> {
+	public refreshToken(@Body() body: { refreshToken: string }): Observable<TokenPairRes> {
 		const { refreshToken } = body;
 		if (!refreshToken) throw new UnauthorizedException();
 
