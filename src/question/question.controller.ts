@@ -54,7 +54,7 @@ export class QuestionController {
 	}
 
 	@Post('')
-	@HttpCode(204)
+	@HttpCode(201)
 	@UseGuards(AuthGuard('bearer'))
 	@ApiQuery({
 		name: 'expand',
