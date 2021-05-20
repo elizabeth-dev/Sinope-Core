@@ -58,11 +58,13 @@ export class QuestionRes {
 			this.recipientId = questionEntity.recipient.toHexString();
 		}
 
-		if (questionEntity.answer && questionEntity.populated('answer')) {
-			this.answerId = ((questionEntity.answer as unknown) as PostEntity)._id;
-			this.answer = new PostRes((questionEntity.answer as unknown) as PostEntity);
-		} else {
-			this.answerId = questionEntity.answer.toHexString();
+		if (questionEntity.answer) {
+			if (questionEntity.populated('answer')) {
+				this.answerId = ((questionEntity.answer as unknown) as PostEntity)._id;
+				this.answer = new PostRes((questionEntity.answer as unknown) as PostEntity);
+			} else {
+				this.answerId = questionEntity.answer.toHexString();
+			}
 		}
 	}
 }
