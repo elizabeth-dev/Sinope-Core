@@ -62,7 +62,7 @@ export class AuthService {
 		return from(
 			this.accessTokenModel.create({
 				accessToken,
-				expiresAt: new Date(Date.now() + 43200 * 60000),
+				expiresAt: new Date(Date.now() + 900 * 1000),
 				user: Types.ObjectId(user),
 				refreshToken,
 			}),
