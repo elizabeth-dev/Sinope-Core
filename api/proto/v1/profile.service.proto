@@ -1,0 +1,13 @@
+syntax = "proto3";
+package app.sinope.grpc_api.v1.service;
+option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
+
+import "profile.model.proto";
+import "google/protobuf/empty.proto";
+
+service ProfileService {
+	rpc GetProfile(app.sinope.grpc_api.v1.model.GetProfileReq) returns (app.sinope.grpc_api.v1.model.ProfileRes) {}
+	rpc DeleteProfile(app.sinope.grpc_api.v1.model.DeleteProfileReq) returns (google.protobuf.Empty) {}
+	rpc UpdateProfile(app.sinope.grpc_api.v1.model.UpdateProfileReq) returns (app.sinope.grpc_api.v1.model.ProfileRes) {}
+	rpc CreateProfile(app.sinope.grpc_api.v1.model.CreateProfileReq) returns (app.sinope.grpc_api.v1.model.ProfileRes) {}
+}
