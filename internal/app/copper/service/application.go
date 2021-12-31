@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"log"
+	"net/url"
 	"os"
 
 	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/adapter"
@@ -18,33 +19,8 @@ func NewApplication(ctx context.Context) app.Application {
 }
 
 func newApplication(ctx context.Context) app.Application {
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		log.Fatal(
-			"You must set your 'MONGODB_URI' environmental variable.",
-		)
-	}
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
-
-	if err != nil {
-		panic(err)
-	}
-
-	/* defer func() {
-		if err := client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}() */
-
-	db := os.Getenv("MONGODB_DB")
-	if db == "" {
-		log.Fatal(
-			"You must set your 'MONGODB_DB' environmental variable.",
-		)
-	}
-
-	profileRepository := adapter.NewProfileRepository(client.Database(db))
+	dbClient := setupMongo(ctx)
+	profileRepository := adapter.NewProfileRepository(dbClient)
 
 	return app.Application{
 		Queries: app.Queries{
@@ -54,4 +30,40 @@ func newApplication(ctx context.Context) app.Application {
 			CreateProfile: command.NewCreateProfileHandler(profileRepository),
 		},
 	}
+}
+
+func setupMongo(ctx context.Context) *mongo.Database {
+	mongoUri := os.Getenv("MONGODB_URI")
+
+	if mongoUri == "" {
+		log.Fatal(
+			"You must set your 'MONGODB_URI' environmental variable.",
+		)
+	}
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
+
+	if err != nil {
+		panic(err)
+	}
+
+	_mongoUri, err := url.Parse(mongoUri)
+
+	var db string
+
+	if err == nil {
+		db = _mongoUri.Path[1:]
+	}
+
+	if db == "" {
+		db = os.Getenv("MONGODB_DB")
+	}
+
+	if db == "" {
+		log.Fatal(
+			"You must set your db on the MongoDB URI or in the 'MONGODB_DB' environmental variable.",
+		)
+	}
+
+	return client.Database(db)
 }

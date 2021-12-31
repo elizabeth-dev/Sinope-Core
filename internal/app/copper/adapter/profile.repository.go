@@ -12,13 +12,11 @@ import (
 )
 
 type ProfileModel struct {
-	Id           string    `bson:"id"`
-	Tag          string    `bson:"tag"`
-	Name         string    `bson:"name"`
-	Description  string    `bson:"description"`
-	CreatedAt    time.Time `bson:"created_at"`
-	FollowingIds []string  `bson:"following_ids"`
-	FollowerIds  []string  `bson:"follower_ids"`
+	Id          string    `bson:"id"`
+	Tag         string    `bson:"tag"`
+	Name        string    `bson:"name"`
+	Description string    `bson:"description"`
+	CreatedAt   time.Time `bson:"created_at"`
 }
 
 type ProfileRepository struct {
@@ -50,8 +48,6 @@ func (r ProfileRepository) GetProfile(
 		profileModel.Name,
 		profileModel.Description,
 		profileModel.CreatedAt,
-		profileModel.FollowingIds,
-		profileModel.FollowerIds,
 	)
 
 	if err != nil {
@@ -60,13 +56,11 @@ func (r ProfileRepository) GetProfile(
 
 	// return query.Profile with the values from profile
 	return &query.Profile{
-		Id:           p.Id(),
-		Tag:          p.Tag(),
-		Name:         p.Name(),
-		Description:  p.Description(),
-		CreatedAt:    p.CreatedAt(),
-		FollowingIds: p.FollowingIds(),
-		FollowerIds:  p.FollowerIds(),
+		Id:          p.Id(),
+		Tag:         p.Tag(),
+		Name:        p.Name(),
+		Description: p.Description(),
+		CreatedAt:   p.CreatedAt(),
 	}, nil
 }
 
@@ -82,12 +76,10 @@ func (r ProfileRepository) CreateProfile(ctx context.Context, pr *profile.Profil
 
 func (r ProfileRepository) marshalProfile(pr *profile.Profile) ProfileModel {
 	return ProfileModel{
-		Id:           pr.Id(),
-		Tag:          pr.Tag(),
-		Name:         pr.Name(),
-		Description:  pr.Description(),
-		CreatedAt:    pr.CreatedAt(),
-		FollowingIds: pr.FollowingIds(),
-		FollowerIds:  pr.FollowerIds(),
+		Id:          pr.Id(),
+		Tag:         pr.Tag(),
+		Name:        pr.Name(),
+		Description: pr.Description(),
+		CreatedAt:   pr.CreatedAt(),
 	}
 }

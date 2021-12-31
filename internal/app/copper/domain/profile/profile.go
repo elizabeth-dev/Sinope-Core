@@ -7,13 +7,11 @@ import (
 )
 
 type Profile struct {
-	id           string
-	tag          string
-	name         string
-	description  string
-	createdAt    time.Time
-	followingIds []string
-	followerIds  []string
+	id          string
+	tag         string
+	name        string
+	description string
+	createdAt   time.Time
 }
 
 func (p *Profile) Id() string {
@@ -36,14 +34,6 @@ func (p *Profile) CreatedAt() time.Time {
 	return p.createdAt
 }
 
-func (p *Profile) FollowingIds() []string {
-	return p.followingIds
-}
-
-func (p *Profile) FollowerIds() []string {
-	return p.followerIds
-}
-
 type Factory struct {
 }
 
@@ -61,13 +51,11 @@ func NewProfile(id string, tag string, name string, description string) (*Profil
 	}
 
 	return &Profile{
-		id:           id,
-		tag:          tag,
-		name:         name,
-		description:  description,
-		createdAt:    time.Now(),
-		followingIds: []string{},
-		followerIds:  []string{},
+		id:          id,
+		tag:         tag,
+		name:        name,
+		description: description,
+		createdAt:   time.Now(),
 	}, nil
 }
 
@@ -75,7 +63,6 @@ func UnmarshalProfileFromDB(id string,
 	tag string,
 	name string,
 	description string,
-	createdAt time.Time,
-	followingIds []string, followerIds []string) (*Profile, error) {
-	return &Profile{id, tag, name, description, createdAt, followingIds, followerIds}, nil
+	createdAt time.Time) (*Profile, error) {
+	return &Profile{id, tag, name, description, createdAt}, nil
 }
