@@ -19,5 +19,6 @@ func main() {
 	server.RunGRPCServer(func(server *grpc.Server) {
 		svc := ports.NewGrpcServer(app)
 		api.RegisterProfileServiceServer(server, svc)
+		api.RegisterQuestionServiceServer(server, svc)
 	})
 }

@@ -1,0 +1,31 @@
+syntax = "proto3";
+package app.sinope.grpc_api.v1.model;
+option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
+
+message GetQuestionReq {
+	string id = 1;
+}
+
+message GetProfileQuestionsReq {
+	string profile_id = 1;
+}
+
+message DeleteQuestionReq {
+	string id = 1;
+}
+
+message CreateQuestionReq {
+	string sender = 1;
+	string recipient = 2;
+	string content = 3;
+	bool anonymous = 4;
+}
+
+message QuestionRes {
+	string id = 1;
+	string sender = 2;
+	string recipient = 3;
+	string content = 4;
+	bool anonymous = 5;
+	uint64 created_at = 6;
+}

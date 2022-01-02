@@ -8,4 +8,14 @@ type Profile struct {
 	Name        string
 	Description string
 	CreatedAt   time.Time
+	Users       []string
+}
+
+type Question struct {
+	Id        string
+	Sender    string
+	Recipient string
+	Content   string
+	Anonymous bool
+	CreatedAt time.Time
 }

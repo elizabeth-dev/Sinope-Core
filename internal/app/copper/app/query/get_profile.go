@@ -2,6 +2,8 @@ package query
 
 import (
 	"context"
+
+	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/domain/profile"
 )
 
 type GetProfileHandler struct {
@@ -9,7 +11,7 @@ type GetProfileHandler struct {
 }
 
 type GetProfileReadModel interface {
-	GetProfile(ctx context.Context, profileId string) (*Profile, error)
+	GetProfile(ctx context.Context, profileId string) (*profile.Profile, error)
 }
 
 func NewGetProfileHandler(readModel GetProfileReadModel) GetProfileHandler {
@@ -20,5 +22,18 @@ func NewGetProfileHandler(readModel GetProfileReadModel) GetProfileHandler {
 }
 
 func (h GetProfileHandler) Handle(ctx context.Context, profileId string) (pl *Profile, err error) {
-	return h.readModel.GetProfile(ctx, profileId)
+	p, err := h.readModel.GetProfile(ctx, profileId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Profile{
+		Id:          p.Id(),
+		Tag:         p.Tag(),
+		Name:        p.Name(),
+		Description: p.Description(),
+		CreatedAt:   p.CreatedAt(),
+		Users:       p.Users(),
+	}, nil
 }

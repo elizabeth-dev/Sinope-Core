@@ -11,6 +11,7 @@ type CreateProfile struct {
 	Tag         string
 	Name        string
 	Description string
+	Users       []string
 }
 
 type CreateProfileHandler struct {
@@ -26,7 +27,7 @@ func NewCreateProfileHandler(profileRepo profile.Repository) CreateProfileHandle
 }
 
 func (h CreateProfileHandler) Handle(ctx context.Context, cmd CreateProfile) error {
-	pr, err := profile.NewProfile(cmd.Id, cmd.Tag, cmd.Name, cmd.Description)
+	pr, err := profile.NewProfile(cmd.Id, cmd.Tag, cmd.Name, cmd.Description, cmd.Users)
 	if err != nil {
 		return err
 	}

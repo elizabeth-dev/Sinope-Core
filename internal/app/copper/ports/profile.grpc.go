@@ -4,8 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/app"
+	"firebase.google.com/go/v4/auth"
 	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/app/command"
+	"github.com/elizabeth-dev/Sinope-Core/internal/pkg/common"
 	"github.com/elizabeth-dev/Sinope-Core/pkg/api"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -13,33 +14,23 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type GrpcServer struct {
-	app app.Application
-	api.UnimplementedProfileServiceServer
-}
-
-func NewGrpcServer(application app.Application) GrpcServer {
-	return GrpcServer{app: application}
-}
-
 func (g GrpcServer) GetProfile(
 	ctx context.Context,
 	req *api.GetProfileReq,
 ) (*api.ProfileRes, error) {
 	pr, err := g.app.Queries.GetProfile.Handle(ctx, req.Id)
 
-	//if err return grpc status error
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// return api.ProfileRes with values from profile
 	return &api.ProfileRes{
 		Id:          pr.Id,
 		Tag:         pr.Tag,
 		Name:        pr.Name,
 		Description: pr.Description,
 		CreatedAt:   uint64(pr.CreatedAt.Unix()),
+		User:        pr.Users,
 	}, nil
 }
 
@@ -68,6 +59,7 @@ func (g GrpcServer) CreateProfile(
 		Tag:         req.Tag,
 		Name:        req.Name,
 		Description: req.Description,
+		Users:       []string{ctx.Value(common.AuthTokenInfoKey).(*auth.Token).Subject},
 	}
 
 	err := g.app.Commands.CreateProfile.Handle(ctx, cmd)
@@ -78,18 +70,17 @@ func (g GrpcServer) CreateProfile(
 
 	pr, err := g.app.Queries.GetProfile.Handle(ctx, newId)
 
-	// if err return grpc status error
 	if err != nil {
 		log.Printf("[GrpcServer] CreateProfile error: %v", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// return api.ProfileRes with values from profile
 	return &api.ProfileRes{
 		Id:          pr.Id,
 		Tag:         pr.Tag,
 		Name:        pr.Name,
 		Description: pr.Description,
 		CreatedAt:   uint64(pr.CreatedAt.Unix()),
+		User:        pr.Users,
 	}, nil
 }

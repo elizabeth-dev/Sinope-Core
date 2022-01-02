@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/app/query"
 	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/domain/profile"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +16,7 @@ type ProfileModel struct {
 	Name        string    `bson:"name"`
 	Description string    `bson:"description"`
 	CreatedAt   time.Time `bson:"created_at"`
+	Users       []string  `bson:"users"`
 }
 
 type ProfileRepository struct {
@@ -33,13 +33,14 @@ func NewProfileRepository(dbClient *mongo.Database) ProfileRepository {
 
 func (r ProfileRepository) GetProfile(
 	ctx context.Context,
-	id string,
-) (*query.Profile, error) {
+	profileId string,
+) (*profile.Profile, error) {
 	var profileModel ProfileModel
-	err := r.col.FindOne(ctx, bson.D{{Key: "id", Value: id}}).Decode(&profileModel)
+
+	err := r.col.FindOne(ctx, bson.D{{Key: "id", Value: profileId}}).Decode(&profileModel)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "[ProfileRepository] Error retrieving profile "+id)
+		return nil, errors.Wrap(err, "[ProfileRepository] Error retrieving profile "+profileId)
 	}
 
 	p, err := profile.UnmarshalProfileFromDB(
@@ -48,20 +49,14 @@ func (r ProfileRepository) GetProfile(
 		profileModel.Name,
 		profileModel.Description,
 		profileModel.CreatedAt,
+		profileModel.Users,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// return query.Profile with the values from profile
-	return &query.Profile{
-		Id:          p.Id(),
-		Tag:         p.Tag(),
-		Name:        p.Name(),
-		Description: p.Description(),
-		CreatedAt:   p.CreatedAt(),
-	}, nil
+	return p, nil
 }
 
 func (r ProfileRepository) CreateProfile(ctx context.Context, pr *profile.Profile) error {
@@ -81,5 +76,6 @@ func (r ProfileRepository) marshalProfile(pr *profile.Profile) ProfileModel {
 		Name:        pr.Name(),
 		Description: pr.Description(),
 		CreatedAt:   pr.CreatedAt(),
+		Users:       pr.Users(),
 	}
 }

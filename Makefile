@@ -3,3 +3,6 @@ package package.docker:
 
 run run.local:
 	@sh -c "'$(CURDIR)/scripts/run.local.sh'"
+
+proto:
+	@sh -c "'$(CURDIR)/scripts/proto.sh'"

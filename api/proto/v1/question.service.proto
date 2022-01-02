@@ -1,0 +1,13 @@
+syntax = "proto3";
+package app.sinope.grpc_api.v1.service;
+option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
+
+import "question.model.proto";
+import "google/protobuf/empty.proto";
+
+service QuestionService {
+	rpc GetQuestion(app.sinope.grpc_api.v1.model.GetQuestionReq) returns (app.sinope.grpc_api.v1.model.QuestionRes) {}
+	rpc GetProfileQuestions(app.sinope.grpc_api.v1.model.GetProfileQuestionsReq) returns (stream app.sinope.grpc_api.v1.model.QuestionRes) {}
+	rpc CreateQuestion(app.sinope.grpc_api.v1.model.CreateQuestionReq) returns (google.protobuf.Empty) {}
+	rpc DeleteQuestion(app.sinope.grpc_api.v1.model.DeleteQuestionReq) returns (google.protobuf.Empty) {}
+}

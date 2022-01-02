@@ -20,14 +20,22 @@ func NewApplication(ctx context.Context) app.Application {
 
 func newApplication(ctx context.Context) app.Application {
 	dbClient := setupMongo(ctx)
-	profileRepository := adapter.NewProfileRepository(dbClient)
+	profileRepo := adapter.NewProfileRepository(dbClient)
+	questionRepo := adapter.NewQuestionRepository(dbClient)
 
 	return app.Application{
 		Queries: app.Queries{
-			GetProfile: query.NewGetProfileHandler(profileRepository),
+			GetProfile:  query.NewGetProfileHandler(profileRepo),
+			GetQuestion: query.NewGetQuestionHandler(questionRepo),
+			GetProfileQuestions: query.NewGetProfileQuestionsHandler(struct {
+				adapter.ProfileRepository
+				adapter.QuestionRepository
+			}{profileRepo, questionRepo}),
 		},
 		Commands: app.Commands{
-			CreateProfile: command.NewCreateProfileHandler(profileRepository),
+			CreateProfile:  command.NewCreateProfileHandler(profileRepo),
+			CreateQuestion: command.NewCreateQuestionHandler(questionRepo, profileRepo),
+			DeleteQuestion: command.NewDeleteQuestionHandler(questionRepo, profileRepo),
 		},
 	}
 }
