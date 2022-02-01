@@ -11,13 +11,19 @@ type Application struct {
 }
 
 type Commands struct {
-	CreateProfile  command.CreateProfileHandler
-	CreateQuestion command.CreateQuestionHandler
-	DeleteQuestion command.DeleteQuestionHandler
+	CreateProfile   command.CreateProfileHandler
+	CreateQuestion  command.CreateQuestionHandler
+	DeleteQuestion  command.DeleteQuestionHandler
+	DeletePost      command.DeletePostHandler
+	CreatePost      command.CreatePostHandler
+	FollowProfile   command.FollowProfileHandler
+	UnfollowProfile command.UnfollowProfileHandler
 }
 
 type Queries struct {
 	GetProfile          query.GetProfileHandler
 	GetQuestion         query.GetQuestionHandler
 	GetProfileQuestions query.GetProfileQuestionsHandler
+	GetPost             query.GetPostHandler
+	GetTimeline         query.GetTimelineHandler
 }

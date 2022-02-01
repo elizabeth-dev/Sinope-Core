@@ -17,14 +17,14 @@ import (
 func (g GrpcServer) GetProfile(
 	ctx context.Context,
 	req *api.GetProfileReq,
-) (*api.ProfileRes, error) {
+) (*api.Profile, error) {
 	pr, err := g.app.Queries.GetProfile.Handle(ctx, req.Id)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.ProfileRes{
+	return &api.Profile{
 		Id:          pr.Id,
 		Tag:         pr.Tag,
 		Name:        pr.Name,
@@ -44,14 +44,14 @@ func (g GrpcServer) DeleteProfile(
 func (g GrpcServer) UpdateProfile(
 	_ context.Context,
 	_ *api.UpdateProfileReq,
-) (*api.ProfileRes, error) {
+) (*api.Profile, error) {
 	panic("not implemented") // TODO: Implement
 }
 
 func (g GrpcServer) CreateProfile(
 	ctx context.Context,
 	req *api.CreateProfileReq,
-) (*api.ProfileRes, error) {
+) (*api.Profile, error) {
 	newId := uuid.NewString()
 
 	cmd := command.CreateProfile{
@@ -75,7 +75,7 @@ func (g GrpcServer) CreateProfile(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.ProfileRes{
+	return &api.Profile{
 		Id:          pr.Id,
 		Tag:         pr.Tag,
 		Name:        pr.Name,

@@ -9,6 +9,8 @@ type GrpcServer struct {
 	app app.Application
 	api.UnimplementedProfileServiceServer
 	api.UnimplementedQuestionServiceServer
+	api.UnimplementedPostServiceServer
+	api.UnimplementedTimelineServiceServer
 }
 
 func NewGrpcServer(application app.Application) GrpcServer {

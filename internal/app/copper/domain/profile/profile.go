@@ -13,6 +13,8 @@ type Profile struct {
 	description string
 	createdAt   time.Time
 	users       []string
+	following   []string
+	followers   []string
 }
 
 func (p *Profile) Id() string {
@@ -37,6 +39,14 @@ func (p *Profile) CreatedAt() time.Time {
 
 func (p *Profile) Users() []string {
 	return p.users
+}
+
+func (p *Profile) Following() []string {
+	return p.following
+}
+
+func (p *Profile) Followers() []string {
+	return p.followers
 }
 
 func (p *Profile) CheckUserOwnership(userId string) bool {
@@ -82,6 +92,8 @@ func NewProfile(
 		description: description,
 		createdAt:   time.Now(),
 		users:       users,
+		following:   []string{},
+		followers:   []string{},
 	}, nil
 }
 
@@ -89,6 +101,19 @@ func UnmarshalProfileFromDB(id string,
 	tag string,
 	name string,
 	description string,
-	createdAt time.Time, users []string) (*Profile, error) {
-	return &Profile{id, tag, name, description, createdAt, users}, nil
+	createdAt time.Time,
+	users []string,
+	following []string,
+	followers []string,
+) (*Profile, error) {
+	return &Profile{
+		id,
+		tag,
+		name,
+		description,
+		createdAt,
+		users,
+		following,
+		followers,
+	}, nil
 }

@@ -9,6 +9,8 @@ type Profile struct {
 	Description string
 	CreatedAt   time.Time
 	Users       []string
+	Following   []string
+	Followers   []string
 }
 
 type Question struct {
@@ -17,5 +19,12 @@ type Question struct {
 	Recipient string
 	Content   string
 	Anonymous bool
+	CreatedAt time.Time
+}
+
+type Post struct {
+	Id        string
+	Content   string
+	AuthorId  string
 	CreatedAt time.Time
 }

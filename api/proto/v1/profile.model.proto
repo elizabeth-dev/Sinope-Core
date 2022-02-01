@@ -4,7 +4,8 @@ option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
 
 message GetProfileReq {
 	string id = 1;
-	// currentProfile as metadata
+	string currentProfileId = 2;
+
 	// TODO: expand
 }
 
@@ -29,7 +30,7 @@ message CreateProfileReq {
 
 }
 
-message ProfileRes {
+message Profile {
 	string id = 1;
 	string tag = 2;
 	string name = 3;

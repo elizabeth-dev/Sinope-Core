@@ -29,4 +29,6 @@ func (e UnauthorizedError) Error() string {
 type Repository interface {
 	GetProfile(ctx context.Context, profileId string) (*Profile, error)
 	CreateProfile(ctx context.Context, pr *Profile) error
+	AddFollower(ctx context.Context, from string, to string) error
+	RemoveFollower(ctx context.Context, from string, to string) error
 }

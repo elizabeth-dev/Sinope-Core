@@ -1,0 +1,13 @@
+syntax = "proto3";
+package app.sinope.grpc_api.v1.model;
+option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
+
+import "post.model.proto";
+
+message GetTimelineReq {
+  string profileId = 1;
+}
+
+message TimelineRes {
+  repeated Post post = 1;
+}
