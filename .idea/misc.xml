@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UnattendedHostPersistenceState">
+    <option name="openedFilesInfos">
+      <list>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="24" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/Makefile" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="229" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/scripts/proto.sh" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="37" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/scripts/proto.publish.sh" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="60" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/build/ci/Dockerfile.protobuf" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="752" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/api/proto/v1/build.gradle.kts" />
+        </OpenedFileInfo>
+      </list>
+    </option>
+  </component>
+</project>
