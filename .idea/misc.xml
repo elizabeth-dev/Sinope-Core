@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK" />
+  <component name="SuppressKotlinCodeStyleNotification">
+    <option name="disableForAll" value="true" />
+  </component>
   <component name="UnattendedHostPersistenceState">
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="24" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/Makefile" />
+          <option name="caretOffset" value="795" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/pkg/stub-android/build.gradle.kts" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="229" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/scripts/proto.sh" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="37" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/scripts/proto.publish.sh" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="60" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/build/ci/Dockerfile.protobuf" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="752" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/api/proto/v1/build.gradle.kts" />
+          <option name="caretOffset" value="1062" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/build.gradle.kts" />
         </OpenedFileInfo>
       </list>
     </option>

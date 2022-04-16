@@ -1,0 +1,9 @@
+syntax = "proto3";
+package app.sinope.grpc_api.v1.model;
+option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
+
+import "post.model.proto";
+
+message TimelineRes {
+  Post post = 1;
+}

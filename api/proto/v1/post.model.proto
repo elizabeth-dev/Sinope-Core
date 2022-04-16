@@ -1,0 +1,31 @@
+syntax = "proto3";
+package app.sinope.grpc_api.v1.model;
+option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
+
+message GetPostReq {
+  string id = 1;
+  // currentProfile as metadata
+}
+
+message DeletePostReq {
+  string id = 1;
+}
+
+message CreatePostReq {
+  string content = 1;
+
+  string question = 16;
+  // currentProfile as metadata
+}
+
+message Post {
+  string id = 1;
+  string content = 2;
+  string profile = 3;
+  uint64 created_at = 4;
+
+  string question = 16;
+
+  // TODO: expand (question?, profile)
+
+}
