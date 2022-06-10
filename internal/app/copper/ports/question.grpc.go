@@ -16,20 +16,20 @@ import (
 func (g GrpcServer) GetQuestion(
 	ctx context.Context,
 	req *api.GetQuestionReq,
-) (*api.QuestionRes, error) {
+) (*api.Question, error) {
 	q, err := g.app.Queries.GetQuestion.Handle(ctx, req.Id)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.QuestionRes{
-		Id:        q.Id,
-		Sender:    q.Sender,
-		Recipient: q.Recipient,
-		Content:   q.Content,
-		Anonymous: q.Anonymous,
-		CreatedAt: uint64(q.CreatedAt.Unix()),
+	return &api.Question{
+		Id:          q.Id,
+		SenderId:    q.Sender,
+		RecipientId: q.Recipient,
+		Content:     q.Content,
+		Anonymous:   q.Anonymous,
+		CreatedAt:   uint64(q.CreatedAt.Unix()),
 	}, nil
 }
 
@@ -50,13 +50,13 @@ func (g GrpcServer) GetProfileQuestions(
 	}
 
 	for _, q := range qs {
-		if err := srv.Send(&api.QuestionRes{
-			Id:        q.Id,
-			Sender:    q.Sender,
-			Recipient: q.Recipient,
-			Content:   q.Content,
-			Anonymous: q.Anonymous,
-			CreatedAt: uint64(q.CreatedAt.Unix()),
+		if err := srv.Send(&api.Question{
+			Id:          q.Id,
+			SenderId:    q.Sender,
+			RecipientId: q.Recipient,
+			Content:     q.Content,
+			Anonymous:   q.Anonymous,
+			CreatedAt:   uint64(q.CreatedAt.Unix()),
 		}); err != nil {
 			return err
 		}

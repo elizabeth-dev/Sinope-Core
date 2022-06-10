@@ -8,6 +8,9 @@ plugins {
     id("com.android.library")
     kotlin("android")
     id("com.google.protobuf")
+
+    `maven-publish`
+    id("com.google.cloud.artifactregistry.gradle-plugin") version "2.1.4"
 }
 
 dependencies {
@@ -15,6 +18,7 @@ dependencies {
 
     api(kotlin("stdlib"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext["coroutinesVersion"]}")
+
     api("io.grpc:grpc-stub:${rootProject.ext["grpcVersion"]}")
     api("io.grpc:grpc-protobuf-lite:${rootProject.ext["grpcVersion"]}")
     api("io.grpc:grpc-kotlin-stub:${rootProject.ext["grpcKotlinVersion"]}")
@@ -22,8 +26,10 @@ dependencies {
 }
 
 android {
-    compileSdk = 31
-    buildToolsVersion = "31.0.0"
+    namespace = "app.sinope.grpc_api.v1.model"
+
+    compileSdk = 32
+    buildToolsVersion = "32.0.0"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -72,5 +78,29 @@ protobuf {
                 }
             }
         }
+    }
+}
+
+repositories {
+    maven(url = "artifactregistry://europe-maven.pkg.dev/test-sinope/sinope")
+}
+
+publishing {
+    publications {
+        publications {
+            create<MavenPublication>("release") {
+                groupId = "app.sinope.grpc_api"
+                artifactId = "stub-android"
+                version = "1.0.0-SNAPSHOT"
+
+                afterEvaluate{
+                    from(components["release"])
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven(url = "artifactregistry://europe-maven.pkg.dev/test-sinope/sinope")
     }
 }

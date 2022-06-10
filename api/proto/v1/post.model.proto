@@ -4,7 +4,7 @@ option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
 
 message GetPostReq {
   string id = 1;
-  // currentProfile as metadata
+  string currentProfileId = 2;
 }
 
 message DeletePostReq {
@@ -13,19 +13,18 @@ message DeletePostReq {
 
 message CreatePostReq {
   string content = 1;
+  string currentProfileId = 2;
 
   string question = 16;
-  // currentProfile as metadata
 }
 
 message Post {
   string id = 1;
   string content = 2;
-  string profile = 3;
+  string author_id = 3;
   uint64 created_at = 4;
 
-  string question = 16;
+  string question_id = 16;
 
   // TODO: expand (question?, profile)
-
 }

@@ -4,6 +4,10 @@ option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
 
 import "post.model.proto";
 
+message GetTimelineReq {
+  string profileId = 1;
+}
+
 message TimelineRes {
-  Post post = 1;
+  repeated Post post = 1;
 }

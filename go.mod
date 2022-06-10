@@ -3,6 +3,7 @@ module github.com/elizabeth-dev/Sinope-Core
 go 1.17
 
 require (
+	firebase.google.com/go/v4 v4.7.0
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 )
@@ -11,7 +12,6 @@ require (
 	cloud.google.com/go v0.75.0 // indirect
 	cloud.google.com/go/firestore v1.5.0 // indirect
 	cloud.google.com/go/storage v1.10.0 // indirect
-	firebase.google.com/go/v4 v4.7.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect

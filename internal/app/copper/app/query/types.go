@@ -19,3 +19,10 @@ type Question struct {
 	Anonymous bool
 	CreatedAt time.Time
 }
+
+type Post struct {
+	Id        string
+	Content   string
+	AuthorId  string
+	CreatedAt time.Time
+}

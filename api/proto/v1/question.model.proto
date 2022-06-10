@@ -4,14 +4,17 @@ option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
 
 message GetQuestionReq {
 	string id = 1;
+	string currentProfileId = 2;
 }
 
 message GetProfileQuestionsReq {
 	string profile_id = 1;
+	string currentProfileId = 2;
 }
 
 message DeleteQuestionReq {
 	string id = 1;
+	string currentProfileId = 2;
 }
 
 message CreateQuestionReq {
@@ -21,10 +24,10 @@ message CreateQuestionReq {
 	bool anonymous = 4;
 }
 
-message QuestionRes {
+message Question {
 	string id = 1;
-	string sender = 2;
-	string recipient = 3;
+	string sender_id = 2;
+	string recipient_id = 3;
 	string content = 4;
 	bool anonymous = 5;
 	uint64 created_at = 6;
