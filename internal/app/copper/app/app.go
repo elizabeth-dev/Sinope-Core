@@ -26,4 +26,5 @@ type Queries struct {
 	GetProfileQuestions query.GetProfileQuestionsHandler
 	GetPost             query.GetPostHandler
 	GetTimeline         query.GetTimelineHandler
+	GetProfilePosts     query.GetProfilePostsHandler
 }

@@ -79,3 +79,27 @@ func (g GrpcServer) CreatePost(ctx context.Context, req *api.CreatePostReq) (*ap
 		AuthorId:  p.AuthorId,
 	}, nil
 }
+
+func (g GrpcServer) GetProfilePosts(req *api.GetProfilePostsReq, srv api.PostService_GetProfilePostsServer) error {
+	ps, err := g.app.Queries.GetProfilePosts.Handle(
+		srv.Context(),
+		req.ProfileId,
+	) // TODO: I think passing an array to gRPC stream can be optimized
+
+	if err != nil {
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	for _, p := range ps {
+		if err := srv.Send(&api.Post{
+			Id:        p.Id,
+			Content:   p.Content,
+			AuthorId:  p.AuthorId,
+			CreatedAt: uint64(p.CreatedAt.Unix()),
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

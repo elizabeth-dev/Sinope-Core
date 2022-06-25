@@ -37,6 +37,7 @@ func newApplication(ctx context.Context) app.Application {
 				adapter.ProfileRepository
 				adapter.PostRepository
 			}{profileRepo, postRepo}),
+			GetProfilePosts: query.NewGetProfilePostsHandler(postRepo),
 		},
 		Commands: app.Commands{
 			CreateProfile:   command.NewCreateProfileHandler(profileRepo),
