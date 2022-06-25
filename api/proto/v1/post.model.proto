@@ -18,6 +18,10 @@ message CreatePostReq {
   string question = 16;
 }
 
+message GetProfilePostsReq {
+  string profile_id = 1;
+}
+
 message Post {
   string id = 1;
   string content = 2;

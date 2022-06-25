@@ -4,7 +4,6 @@ option go_package = "github.com/elizabeth-dev/Sinope-Core/pkg/api";
 
 import "post.model.proto";
 import "timeline.model.proto";
-import "google/protobuf/empty.proto";
 
 service TimelineService {
 	rpc GetTimeline(app.sinope.grpc_api.v1.model.GetTimelineReq) returns (stream app.sinope.grpc_api.v1.model.Post) {}

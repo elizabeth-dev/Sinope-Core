@@ -9,4 +9,6 @@ service PostService {
   rpc GetPost(app.sinope.grpc_api.v1.model.GetPostReq) returns (app.sinope.grpc_api.v1.model.Post) {}
   rpc DeletePost(app.sinope.grpc_api.v1.model.DeletePostReq) returns (google.protobuf.Empty) {}
   rpc CreatePost(app.sinope.grpc_api.v1.model.CreatePostReq) returns (app.sinope.grpc_api.v1.model.Post) {}
+  rpc GetProfilePosts(app.sinope.grpc_api.v1.model.GetProfilePostsReq) returns (stream app.sinope.grpc_api.v1.model.Post) {}
+
 }
