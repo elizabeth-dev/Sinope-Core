@@ -35,5 +35,7 @@ func (h GetProfileHandler) Handle(ctx context.Context, profileId string) (pl *Pr
 		Description: p.Description(),
 		CreatedAt:   p.CreatedAt(),
 		Users:       p.Users(),
+		Followers:   p.Followers(),
+		Following:   p.Following(),
 	}, nil
 }

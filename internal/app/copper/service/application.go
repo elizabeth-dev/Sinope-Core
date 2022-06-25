@@ -33,13 +33,19 @@ func newApplication(ctx context.Context) app.Application {
 				adapter.QuestionRepository
 			}{profileRepo, questionRepo}),
 			GetPost: query.NewGetPostHandler(postRepo),
+			GetTimeline: query.NewGetTimelineHandler(struct {
+				adapter.ProfileRepository
+				adapter.PostRepository
+			}{profileRepo, postRepo}),
 		},
 		Commands: app.Commands{
-			CreateProfile:  command.NewCreateProfileHandler(profileRepo),
-			CreateQuestion: command.NewCreateQuestionHandler(questionRepo, profileRepo),
-			DeleteQuestion: command.NewDeleteQuestionHandler(questionRepo, profileRepo),
-			DeletePost:     command.NewDeletePostHandler(profileRepo, postRepo),
-			CreatePost:     command.NewCreatePostHandler(postRepo, profileRepo),
+			CreateProfile:   command.NewCreateProfileHandler(profileRepo),
+			CreateQuestion:  command.NewCreateQuestionHandler(questionRepo, profileRepo),
+			DeleteQuestion:  command.NewDeleteQuestionHandler(questionRepo, profileRepo),
+			DeletePost:      command.NewDeletePostHandler(profileRepo, postRepo),
+			CreatePost:      command.NewCreatePostHandler(postRepo, profileRepo),
+			FollowProfile:   command.NewFollowProfileHandler(profileRepo),
+			UnfollowProfile: command.NewUnfollowProfileHandler(profileRepo),
 		},
 	}
 }

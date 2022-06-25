@@ -73,6 +73,38 @@ func (r PostRepository) DeletePost(ctx context.Context, postId string) error {
 	return nil
 }
 
+func (r PostRepository) GetPostsByProfile(ctx context.Context, profileId string) ([]*post.Post, error) {
+	var posts []PostModel
+
+	cur, err := r.col.Find(ctx, bson.D{{Key: "author_id", Value: profileId}})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "[PostRepository] Error retrieving posts for profile "+profileId)
+	}
+
+	if err := cur.All(ctx, &posts); err != nil {
+		return nil, errors.Wrap(err, "[PostRepository] Error parsing posts")
+	}
+
+	var ps []*post.Post
+	for _, p := range posts {
+		p, err := post.UnmarshalPostFromDB(
+			p.Id,
+			p.Content,
+			p.AuthorId,
+			p.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		ps = append(ps, p)
+	}
+
+	return ps, nil
+}
+
 func (r PostRepository) marshalPost(pr *post.Post) PostModel {
 	return PostModel{
 		Id:        pr.Id(),

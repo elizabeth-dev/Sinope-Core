@@ -17,6 +17,8 @@ type ProfileModel struct {
 	Description string    `bson:"description"`
 	CreatedAt   time.Time `bson:"created_at"`
 	Users       []string  `bson:"users"`
+	Following   []string  `bson:"following"`
+	Followers   []string  `bson:"followers"`
 }
 
 type ProfileRepository struct {
@@ -37,7 +39,7 @@ func (r ProfileRepository) GetProfile(
 ) (*profile.Profile, error) {
 	var profileModel ProfileModel
 
-	err := r.col.FindOne(ctx, bson.D{{Key: "id", Value: profileId}}).Decode(&profileModel)
+	err := r.col.FindOne(ctx, bson.D{{"id", profileId}}).Decode(&profileModel)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "[ProfileRepository] Error retrieving profile "+profileId)
@@ -50,6 +52,8 @@ func (r ProfileRepository) GetProfile(
 		profileModel.Description,
 		profileModel.CreatedAt,
 		profileModel.Users,
+		profileModel.Following,
+		profileModel.Followers,
 	)
 
 	if err != nil {
@@ -69,6 +73,32 @@ func (r ProfileRepository) CreateProfile(ctx context.Context, pr *profile.Profil
 	return nil
 }
 
+func (r ProfileRepository) AddFollower(ctx context.Context, from string, to string) error {
+	if _, err := r.col.UpdateByID(ctx, to, bson.D{{"$addToSet", bson.D{{"followers", from}}}}); err != nil {
+		return err
+	}
+
+	// TODO: Parallelize this
+	if _, err := r.col.UpdateByID(ctx, from, bson.D{{"$addToSet", bson.D{{"following", to}}}}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r ProfileRepository) RemoveFollower(ctx context.Context, from string, to string) error {
+	if _, err := r.col.UpdateByID(ctx, to, bson.D{{"$pullAll", bson.D{{"followers", from}}}}); err != nil {
+		return err
+	}
+
+	// TODO: Parallelize this
+	if _, err := r.col.UpdateByID(ctx, from, bson.D{{"$pullAll", bson.D{{"following", to}}}}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r ProfileRepository) marshalProfile(pr *profile.Profile) ProfileModel {
 	return ProfileModel{
 		Id:          pr.Id(),
@@ -77,5 +107,7 @@ func (r ProfileRepository) marshalProfile(pr *profile.Profile) ProfileModel {
 		Description: pr.Description(),
 		CreatedAt:   pr.CreatedAt(),
 		Users:       pr.Users(),
+		Following:   pr.Following(),
+		Followers:   pr.Followers(),
 	}
 }

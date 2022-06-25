@@ -9,6 +9,8 @@ type Profile struct {
 	Description string
 	CreatedAt   time.Time
 	Users       []string
+	Following   []string
+	Followers   []string
 }
 
 type Question struct {
