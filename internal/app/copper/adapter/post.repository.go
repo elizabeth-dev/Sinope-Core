@@ -11,10 +11,12 @@ import (
 )
 
 type PostModel struct {
-	Id        string    `bson:"id"`
-	Content   string    `bson:"content"`
-	AuthorId  string    `bson:"author_id"`
-	CreatedAt time.Time `bson:"created_at"`
+	Id         string        `bson:"id"`
+	Content    string        `bson:"content"`
+	AuthorId   string        `bson:"author_id"`
+	CreatedAt  time.Time     `bson:"created_at"`
+	QuestionId string        `bson:"question_id"`
+	Question   QuestionModel `bson:"question"`
 }
 
 type PostRepository struct {
@@ -35,17 +37,26 @@ func (r PostRepository) GetPost(
 ) (*post.Post, error) {
 	var postModel PostModel
 
-	err := r.col.FindOne(ctx, bson.D{{Key: "id", Value: postId}}).Decode(&postModel)
+	cur, err := r.col.Aggregate(ctx, mongo.Pipeline{
+		bson.D{{"$match", bson.D{{"id", postId}}}},
+		bson.D{{"$lookup", bson.D{{"from", "question"}, {"localField", "question_id"}, {"foreignField", "id"}, {"as", "question"}}}},
+		bson.D{{"$unwind", bson.D{{"path", "$question"}, {"preserveNullAndEmptyArrays", false}}}},
+	})
+
+	//FindOne(ctx, bson.D{{Key: "id", Value: postId}}).Decode(&postModel)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "[PostRepository] Error retrieving post "+postId)
 	}
+
+	cur.
 
 	p, err := post.UnmarshalPostFromDB(
 		postModel.Id,
 		postModel.Content,
 		postModel.AuthorId,
 		postModel.CreatedAt,
+		postModel.QuestionId,
 	)
 
 	if err != nil {
@@ -93,6 +104,7 @@ func (r PostRepository) GetPostsByProfile(ctx context.Context, profileId string)
 			p.Content,
 			p.AuthorId,
 			p.CreatedAt,
+			p.QuestionId,
 		)
 
 		if err != nil {
@@ -107,9 +119,10 @@ func (r PostRepository) GetPostsByProfile(ctx context.Context, profileId string)
 
 func (r PostRepository) marshalPost(pr *post.Post) PostModel {
 	return PostModel{
-		Id:        pr.Id(),
-		Content:   pr.Content(),
-		AuthorId:  pr.AuthorId(),
-		CreatedAt: pr.CreatedAt(),
+		Id:         pr.Id(),
+		Content:    pr.Content(),
+		AuthorId:   pr.AuthorId(),
+		CreatedAt:  pr.CreatedAt(),
+		QuestionId: pr.QuestionId(),
 	}
 }

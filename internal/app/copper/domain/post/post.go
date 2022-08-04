@@ -7,10 +7,11 @@ import (
 )
 
 type Post struct {
-	id        string
-	content   string
-	authorId  string
-	createdAt time.Time
+	id         string
+	content    string
+	authorId   string
+	createdAt  time.Time
+	questionId string
 }
 
 func (p *Post) Id() string {
@@ -29,6 +30,10 @@ func (p *Post) CreatedAt() time.Time {
 	return p.createdAt
 }
 
+func (p Post) QuestionId() string {
+	return p.questionId
+}
+
 func (p *Post) CheckProfileOwnership(profileId string) bool {
 	return p.authorId == profileId
 }
@@ -36,7 +41,7 @@ func (p *Post) CheckProfileOwnership(profileId string) bool {
 type Factory struct {
 }
 
-func NewPost(id string, content string, authorId string) (*Post, error) {
+func NewPost(id string, content string, authorId string, questionId string) (*Post, error) {
 	if id == "" {
 		return nil, errors.New("[Post] Empty id")
 	}
@@ -50,13 +55,14 @@ func NewPost(id string, content string, authorId string) (*Post, error) {
 	}
 
 	return &Post{
-		id:        id,
-		content:   content,
-		authorId:  authorId,
-		createdAt: time.Now(),
+		id:         id,
+		content:    content,
+		authorId:   authorId,
+		createdAt:  time.Now(),
+		questionId: questionId,
 	}, nil
 }
 
-func UnmarshalPostFromDB(id string, content string, authorId string, createdAt time.Time) (*Post, error) {
-	return &Post{id, content, authorId, createdAt}, nil
+func UnmarshalPostFromDB(id string, content string, authorId string, createdAt time.Time, questionId string) (*Post, error) {
+	return &Post{id, content, authorId, createdAt, questionId}, nil
 }
