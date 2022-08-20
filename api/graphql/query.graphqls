@@ -1,0 +1,4 @@
+type Query {
+    questions(recipient: String!): [Question!]!
+    profile(tag: String!): Profile!
+}

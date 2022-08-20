@@ -6,6 +6,7 @@ type Profile struct {
 	Id          string
 	Tag         string
 	Name        string
+	Avatar      string
 	Description string
 	CreatedAt   time.Time
 	Users       []string

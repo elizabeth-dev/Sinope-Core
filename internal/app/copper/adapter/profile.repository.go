@@ -14,6 +14,7 @@ type ProfileModel struct {
 	Id          string    `bson:"id"`
 	Tag         string    `bson:"tag"`
 	Name        string    `bson:"name"`
+	Avatar      string    `bson:"avatar"`
 	Description string    `bson:"description"`
 	CreatedAt   time.Time `bson:"created_at"`
 	Users       []string  `bson:"users"`
@@ -49,6 +50,34 @@ func (r ProfileRepository) GetProfile(
 		profileModel.Id,
 		profileModel.Tag,
 		profileModel.Name,
+		profileModel.Avatar,
+		profileModel.Description,
+		profileModel.CreatedAt,
+		profileModel.Users,
+		profileModel.Following,
+		profileModel.Followers,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (r ProfileRepository) GetProfileByTag(ctx context.Context, tag string) (*profile.Profile, error) {
+	var profileModel ProfileModel
+
+	err := r.col.FindOne(ctx, bson.D{{"tag", tag}}).Decode(&profileModel)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "[ProfileRepository] Error retrieving profile for tag "+tag)
+	}
+
+	p, err := profile.UnmarshalProfileFromDB(profileModel.Id,
+		profileModel.Tag,
+		profileModel.Name,
+		profileModel.Avatar,
 		profileModel.Description,
 		profileModel.CreatedAt,
 		profileModel.Users,
@@ -104,6 +133,7 @@ func (r ProfileRepository) marshalProfile(pr *profile.Profile) ProfileModel {
 		Id:          pr.Id(),
 		Tag:         pr.Tag(),
 		Name:        pr.Name(),
+		Avatar:      pr.Avatar(),
 		Description: pr.Description(),
 		CreatedAt:   pr.CreatedAt(),
 		Users:       pr.Users(),

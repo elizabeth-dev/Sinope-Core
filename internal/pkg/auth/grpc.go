@@ -2,39 +2,13 @@ package auth
 
 import (
 	"context"
-	"log"
-
-	firebase "firebase.google.com/go/v4"
-	"firebase.google.com/go/v4/auth"
 	"github.com/elizabeth-dev/Sinope-Core/internal/pkg/common"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type FireAuthGrpcMiddleware struct {
-	authClient *auth.Client
-}
-
-func NewFireAuthGrpcMiddleware(ctx context.Context) FireAuthGrpcMiddleware {
-	app, err := firebase.NewApp(ctx, nil)
-
-	if err != nil {
-		log.Fatalf("error initializing firebase SDK: %v\n", err)
-	}
-
-	auth, err := app.Auth(ctx)
-
-	if err != nil {
-		log.Fatalf("error initializing firebase auth: %v\n", err)
-	}
-
-	return FireAuthGrpcMiddleware{
-		authClient: auth,
-	}
-}
-
-func (m FireAuthGrpcMiddleware) AuthFunc(ctx context.Context) (context.Context, error) {
+func (m FireAuthMiddleware) GRPC(ctx context.Context) (context.Context, error) {
 
 	token, err := grpc_auth.AuthFromMD(ctx, "bearer")
 	if err != nil {

@@ -69,15 +69,12 @@ func (g GrpcServer) CreateQuestion(
 	ctx context.Context,
 	req *api.CreateQuestionReq,
 ) (*emptypb.Empty, error) {
-	userId := ctx.Value(common.AuthTokenInfoKey).(*auth.Token).Subject
+	// userId := ctx.Value(common.AuthTokenInfoKey).(*auth.Token).Subject
 
 	cmd := command.CreateQuestion{
 		Id:        uuid.NewString(),
-		Sender:    req.Sender,
 		Recipient: req.Recipient,
 		Content:   req.Content,
-		Anonymous: req.Anonymous,
-		FromUser:  userId,
 	}
 
 	err := g.app.Commands.CreateQuestion.Handle(ctx, cmd)

@@ -54,10 +54,8 @@ func (h GetProfileQuestionsHandler) Handle(
 	for _, q := range q {
 		qs = append(qs, &Question{
 			Id:        q.Id(),
-			Sender:    q.Sender(),
 			Recipient: q.Recipient(),
 			Content:   q.Content(),
-			Anonymous: q.Anonymous(),
 			CreatedAt: q.CreatedAt(),
 		})
 	}

@@ -33,10 +33,8 @@ func (h GetQuestionHandler) Handle(
 
 	return &Question{
 		Id:        q.Id(),
-		Sender:    q.Sender(),
 		Recipient: q.Recipient(),
 		Content:   q.Content(),
-		Anonymous: q.Anonymous(),
 		CreatedAt: q.CreatedAt(),
 	}, nil
 }

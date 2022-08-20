@@ -1,0 +1,6 @@
+type Profile {
+    ID: ID!
+    name: String!
+    tag: String!
+    avatar: String!
+}

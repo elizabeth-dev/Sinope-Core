@@ -1,0 +1,17 @@
+scalar Time
+
+type Question {
+    id: ID!
+    content: String!
+    recipientId: String!
+    createdAt: Time!
+}
+
+input NewQuestion {
+    content: String!
+    recipientId: String!
+}
+
+type Mutation {
+    sendQuestion(input: NewQuestion!): Boolean!
+}

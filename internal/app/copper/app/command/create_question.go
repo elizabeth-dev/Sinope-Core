@@ -9,11 +9,8 @@ import (
 
 type CreateQuestion struct {
 	Id        string
-	Sender    string
 	Recipient string
 	Content   string
-	Anonymous bool
-	FromUser  string
 }
 
 type CreateQuestionHandler struct {
@@ -37,7 +34,7 @@ func NewCreateQuestionHandler(
 }
 
 func (h CreateQuestionHandler) Handle(ctx context.Context, cmd CreateQuestion) error {
-	// Check user permissions for profile
+	/*// Check user permissions for profile
 	p, err := h.profileRepo.GetProfile(ctx, cmd.Sender)
 
 	if err != nil {
@@ -47,9 +44,9 @@ func (h CreateQuestionHandler) Handle(ctx context.Context, cmd CreateQuestion) e
 	if !p.CheckUserOwnership(cmd.FromUser) {
 		return profile.UnauthorizedError{ProfileID: p.Id(), UserID: cmd.FromUser}
 	}
-
+	*/
 	// Generate new question
-	qr, err := question.NewQuestion(cmd.Id, cmd.Sender, cmd.Recipient, cmd.Content, cmd.Anonymous)
+	qr, err := question.NewQuestion(cmd.Id, cmd.Recipient, cmd.Content)
 	if err != nil {
 		return err
 	}

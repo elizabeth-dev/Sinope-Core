@@ -6,23 +6,23 @@ import (
 	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/domain/profile"
 )
 
-type GetProfileHandler struct {
-	readModel GetProfileReadModel
+type GetProfileByTagHandler struct {
+	readModel GetProfileByTagReadModel
 }
 
-type GetProfileReadModel interface {
-	GetProfile(ctx context.Context, profileId string) (*profile.Profile, error)
+type GetProfileByTagReadModel interface {
+	GetProfileByTag(ctx context.Context, tag string) (*profile.Profile, error)
 }
 
-func NewGetProfileHandler(readModel GetProfileReadModel) GetProfileHandler {
+func NewGetProfileByTagHandler(readModel GetProfileByTagReadModel) GetProfileByTagHandler {
 	if readModel == nil {
 		panic("nil readModel")
 	}
-	return GetProfileHandler{readModel}
+	return GetProfileByTagHandler{readModel}
 }
 
-func (h GetProfileHandler) Handle(ctx context.Context, profileId string) (pl *Profile, err error) {
-	p, err := h.readModel.GetProfile(ctx, profileId)
+func (h GetProfileByTagHandler) Handle(ctx context.Context, tag string) (pl *Profile, err error) {
+	p, err := h.readModel.GetProfileByTag(ctx, tag)
 
 	if err != nil {
 		return nil, err

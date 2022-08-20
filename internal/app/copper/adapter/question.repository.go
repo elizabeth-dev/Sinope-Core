@@ -12,10 +12,8 @@ import (
 
 type QuestionModel struct {
 	Id        string    `bson:"id"`
-	Sender    string    `bson:"sender"`
 	Recipient string    `bson:"recipient"`
 	Content   string    `bson:"content"`
-	Anonymous bool      `bson:"anonymous"`
 	CreatedAt time.Time `bson:"created_at"`
 }
 
@@ -45,10 +43,8 @@ func (r QuestionRepository) GetQuestion(
 
 	q, err := question.UnmarshalQuestionFromDB(
 		questionModel.Id,
-		questionModel.Sender,
 		questionModel.Recipient,
 		questionModel.Content,
-		questionModel.Anonymous,
 		questionModel.CreatedAt,
 	)
 
@@ -78,10 +74,8 @@ func (r QuestionRepository) GetQuestionsByProfile(
 	for _, q := range questions {
 		q, err := question.UnmarshalQuestionFromDB(
 			q.Id,
-			q.Sender,
 			q.Recipient,
 			q.Content,
-			q.Anonymous,
 			q.CreatedAt,
 		)
 
@@ -116,10 +110,8 @@ func (r QuestionRepository) DeleteQuestion(ctx context.Context, id string) error
 func (r QuestionRepository) marshalQuestion(q *question.Question) QuestionModel {
 	return QuestionModel{
 		Id:        q.Id(),
-		Sender:    q.Sender(),
 		Recipient: q.Recipient(),
 		Content:   q.Content(),
-		Anonymous: q.Anonymous(),
 		CreatedAt: q.CreatedAt(),
 	}
 }

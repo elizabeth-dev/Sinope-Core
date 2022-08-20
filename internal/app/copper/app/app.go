@@ -22,6 +22,7 @@ type Commands struct {
 
 type Queries struct {
 	GetProfile          query.GetProfileHandler
+	GetProfileByTag     query.GetProfileByTagHandler
 	GetQuestion         query.GetQuestionHandler
 	GetProfileQuestions query.GetProfileQuestionsHandler
 	GetPost             query.GetPostHandler

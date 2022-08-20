@@ -47,7 +47,7 @@ func (h CreatePostHandler) Handle(ctx context.Context, cmd CreatePost) error {
 	}
 
 	// Generate new post
-	qr, err := post.NewPost(cmd.Id, cmd.Content, cmd.AuthorId)
+	qr, err := post.NewPost(cmd.Id, cmd.Content, cmd.AuthorId, "")
 	if err != nil {
 		return err
 	}

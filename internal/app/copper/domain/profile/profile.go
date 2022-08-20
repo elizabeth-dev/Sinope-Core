@@ -10,6 +10,7 @@ type Profile struct {
 	id          string
 	tag         string
 	name        string
+	avatar      string
 	description string
 	createdAt   time.Time
 	users       []string
@@ -27,6 +28,10 @@ func (p *Profile) Tag() string {
 
 func (p *Profile) Name() string {
 	return p.name
+}
+
+func (p *Profile) Avatar() string {
+	return p.avatar
 }
 
 func (p *Profile) Description() string {
@@ -89,6 +94,7 @@ func NewProfile(
 		id:          id,
 		tag:         tag,
 		name:        name,
+		avatar:      "",
 		description: description,
 		createdAt:   time.Now(),
 		users:       users,
@@ -100,6 +106,7 @@ func NewProfile(
 func UnmarshalProfileFromDB(id string,
 	tag string,
 	name string,
+	avatar string,
 	description string,
 	createdAt time.Time,
 	users []string,
@@ -110,6 +117,7 @@ func UnmarshalProfileFromDB(id string,
 		id,
 		tag,
 		name,
+		avatar,
 		description,
 		createdAt,
 		users,

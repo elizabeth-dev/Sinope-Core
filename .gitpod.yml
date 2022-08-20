@@ -14,3 +14,4 @@ jetbrains:
     plugins:
       - org.jetbrains.plugins.go
       - com.github.copilot
+      - com.intellij.lang.jsgraphql

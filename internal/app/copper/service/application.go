@@ -26,8 +26,9 @@ func newApplication(ctx context.Context) app.Application {
 
 	return app.Application{
 		Queries: app.Queries{
-			GetProfile:  query.NewGetProfileHandler(profileRepo),
-			GetQuestion: query.NewGetQuestionHandler(questionRepo),
+			GetProfile:      query.NewGetProfileHandler(profileRepo),
+			GetProfileByTag: query.NewGetProfileByTagHandler(profileRepo),
+			GetQuestion:     query.NewGetQuestionHandler(questionRepo),
 			GetProfileQuestions: query.NewGetProfileQuestionsHandler(struct {
 				adapter.ProfileRepository
 				adapter.QuestionRepository

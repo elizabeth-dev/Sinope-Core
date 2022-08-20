@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -14,30 +13,28 @@ import (
 	"google.golang.org/grpc"
 )
 
-func RunGRPCServer(registerServer func(server *grpc.Server)) {
+func RunGRPCServer(authMiddleware auth.FireAuthMiddleware, registerServer func(server *grpc.Server)) {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	addr := fmt.Sprintf(":%s", port)
-	RunGRPCServerOnAddr(addr, registerServer)
+	RunGRPCServerOnAddr(addr, authMiddleware, registerServer)
 }
 
-func RunGRPCServerOnAddr(addr string, registerServer func(server *grpc.Server)) {
-	authMiddleware := auth.NewFireAuthGrpcMiddleware(context.Background())
-
+func RunGRPCServerOnAddr(addr string, authMiddleware auth.FireAuthMiddleware, registerServer func(server *grpc.Server)) {
 	grpcServer := grpc.NewServer(
 		grpc_middleware.WithUnaryServerChain(
 			grpc_ctxtags.UnaryServerInterceptor(
 				grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor),
 			),
-			grpc_auth.UnaryServerInterceptor(authMiddleware.AuthFunc),
+			grpc_auth.UnaryServerInterceptor(authMiddleware.GRPC),
 		),
 		grpc_middleware.WithStreamServerChain(
 			grpc_ctxtags.StreamServerInterceptor(
 				grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor),
 			),
-			grpc_auth.StreamServerInterceptor(authMiddleware.AuthFunc),
+			grpc_auth.StreamServerInterceptor(authMiddleware.GRPC),
 		),
 	)
 	registerServer(grpcServer)

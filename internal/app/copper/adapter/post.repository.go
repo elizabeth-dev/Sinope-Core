@@ -37,19 +37,17 @@ func (r PostRepository) GetPost(
 ) (*post.Post, error) {
 	var postModel PostModel
 
-	cur, err := r.col.Aggregate(ctx, mongo.Pipeline{
+	/*cur, err := r.col.Aggregate(ctx, mongo.Pipeline{
 		bson.D{{"$match", bson.D{{"id", postId}}}},
 		bson.D{{"$lookup", bson.D{{"from", "question"}, {"localField", "question_id"}, {"foreignField", "id"}, {"as", "question"}}}},
 		bson.D{{"$unwind", bson.D{{"path", "$question"}, {"preserveNullAndEmptyArrays", false}}}},
-	})
+	})*/
 
-	//FindOne(ctx, bson.D{{Key: "id", Value: postId}}).Decode(&postModel)
+	err := r.col.FindOne(ctx, bson.D{{Key: "id", Value: postId}}).Decode(&postModel)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "[PostRepository] Error retrieving post "+postId)
 	}
-
-	cur.
 
 	p, err := post.UnmarshalPostFromDB(
 		postModel.Id,
