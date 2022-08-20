@@ -1,0 +1,4 @@
+type Mutation {
+    sendQuestion(content: String!, recipientID: String!): Boolean!
+    createProfile(name: String!, tag: String!, description: String!): Profile!
+}

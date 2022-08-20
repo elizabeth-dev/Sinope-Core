@@ -46,7 +46,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		SendQuestion func(childComplexity int, input model.NewQuestion) int
+		CreateProfile func(childComplexity int, name string, tag string, description string) int
+		SendQuestion  func(childComplexity int, content string, recipientID string) int
 	}
 
 	Profile struct {
@@ -70,7 +71,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	SendQuestion(ctx context.Context, input model.NewQuestion) (bool, error)
+	SendQuestion(ctx context.Context, content string, recipientID string) (bool, error)
+	CreateProfile(ctx context.Context, name string, tag string, description string) (*model.Profile, error)
 }
 type QueryResolver interface {
 	Questions(ctx context.Context, recipient string) ([]*model.Question, error)
@@ -92,6 +94,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Mutation.createProfile":
+		if e.complexity.Mutation.CreateProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createProfile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateProfile(childComplexity, args["name"].(string), args["tag"].(string), args["description"].(string)), true
+
 	case "Mutation.sendQuestion":
 		if e.complexity.Mutation.SendQuestion == nil {
 			break
@@ -102,7 +116,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SendQuestion(childComplexity, args["input"].(model.NewQuestion)), true
+		return e.complexity.Mutation.SendQuestion(childComplexity, args["content"].(string), args["recipientID"].(string)), true
 
 	case "Profile.avatar":
 		if e.complexity.Profile.Avatar == nil {
@@ -191,9 +205,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
-	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputNewQuestion,
-	)
+	inputUnmarshalMap := graphql.BuildUnmarshalerMap()
 	first := true
 
 	switch rc.Operation.Operation {
@@ -253,6 +265,11 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../../../api/graphql/mutation.graphqls", Input: `type Mutation {
+    sendQuestion(content: String!, recipientID: String!): Boolean!
+    createProfile(name: String!, tag: String!, description: String!): Profile!
+}
+`, BuiltIn: false},
 	{Name: "../../../api/graphql/profile.graphqls", Input: `type Profile {
     ID: ID!
     name: String!
@@ -272,15 +289,6 @@ type Question {
     recipientId: String!
     createdAt: Time!
 }
-
-input NewQuestion {
-    content: String!
-    recipientId: String!
-}
-
-type Mutation {
-    sendQuestion(input: NewQuestion!): Boolean!
-}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -289,18 +297,60 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_sendQuestion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewQuestion
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewQuestion2githubᚗcomᚋelizabethᚑdevᚋSinopeᚑCoreᚋinternalᚋpkgᚋgraphqlᚋmodelᚐNewQuestion(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["name"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["tag"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tag"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["tag"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_sendQuestion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["content"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["content"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["recipientID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recipientID"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["recipientID"] = arg1
 	return args, nil
 }
 
@@ -401,7 +451,7 @@ func (ec *executionContext) _Mutation_sendQuestion(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SendQuestion(rctx, fc.Args["input"].(model.NewQuestion))
+		return ec.resolvers.Mutation().SendQuestion(rctx, fc.Args["content"].(string), fc.Args["recipientID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -436,6 +486,71 @@ func (ec *executionContext) fieldContext_Mutation_sendQuestion(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_sendQuestion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateProfile(rctx, fc.Args["name"].(string), fc.Args["tag"].(string), fc.Args["description"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Profile)
+	fc.Result = res
+	return ec.marshalNProfile2ᚖgithubᚗcomᚋelizabethᚑdevᚋSinopeᚑCoreᚋinternalᚋpkgᚋgraphqlᚋmodelᚐProfile(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ID":
+				return ec.fieldContext_Profile_ID(ctx, field)
+			case "name":
+				return ec.fieldContext_Profile_name(ctx, field)
+			case "tag":
+				return ec.fieldContext_Profile_tag(ctx, field)
+			case "avatar":
+				return ec.fieldContext_Profile_avatar(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2826,42 +2941,6 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNewQuestion(ctx context.Context, obj interface{}) (model.NewQuestion, error) {
-	var it model.NewQuestion
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"content", "recipientId"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "content":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
-			it.Content, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "recipientId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recipientId"))
-			it.RecipientID, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2893,6 +2972,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_sendQuestion(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createProfile":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createProfile(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -3441,11 +3529,6 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNNewQuestion2githubᚗcomᚋelizabethᚑdevᚋSinopeᚑCoreᚋinternalᚋpkgᚋgraphqlᚋmodelᚐNewQuestion(ctx context.Context, v interface{}) (model.NewQuestion, error) {
-	res, err := ec.unmarshalInputNewQuestion(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNProfile2githubᚗcomᚋelizabethᚑdevᚋSinopeᚑCoreᚋinternalᚋpkgᚋgraphqlᚋmodelᚐProfile(ctx context.Context, sel ast.SelectionSet, v model.Profile) graphql.Marshaler {

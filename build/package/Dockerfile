@@ -1,18 +1,20 @@
-FROM golang:1.17-alpine as builder
+FROM golang:1.19-alpine as builder
 
 WORKDIR /usr/src/app
 
 COPY go.mod .
 COPY go.sum .
 
-RUN go mod download
+RUN go version
+
+RUN go mod download -x
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app ./cmd/copper
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-w -s" -o /app ./cmd/copper
 
 # Prod container
-FROM gcr.io/distroless/static as prod
+FROM --platform=linux/arm64 gcr.io/distroless/static as prod
 
 COPY --from=builder /app /bin/app
 

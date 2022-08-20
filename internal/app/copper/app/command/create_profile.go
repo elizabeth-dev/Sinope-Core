@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/elizabeth-dev/Sinope-Core/internal/app/copper/domain/profile"
 )
@@ -27,7 +28,13 @@ func NewCreateProfileHandler(profileRepo profile.Repository) CreateProfileHandle
 }
 
 func (h CreateProfileHandler) Handle(ctx context.Context, cmd CreateProfile) error {
-	pr, err := profile.NewProfile(cmd.Id, cmd.Tag, cmd.Name, cmd.Description, cmd.Users)
+	pr, err := h.profileRepo.GetProfileByTag(ctx, cmd.Tag)
+
+	if pr != nil {
+		return fmt.Errorf("tag already exists")
+	}
+
+	pr, err = profile.NewProfile(cmd.Id, cmd.Tag, cmd.Name, cmd.Description, cmd.Users)
 	if err != nil {
 		return err
 	}

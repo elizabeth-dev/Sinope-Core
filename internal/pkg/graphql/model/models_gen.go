@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-type NewQuestion struct {
-	Content     string `json:"content"`
-	RecipientID string `json:"recipientId"`
-}
-
 type Profile struct {
 	ID     string `json:"ID"`
 	Name   string `json:"name"`

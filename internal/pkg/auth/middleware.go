@@ -12,7 +12,9 @@ type FireAuthMiddleware struct {
 }
 
 func NewFireAuthMiddleware(ctx context.Context) FireAuthMiddleware {
-	app, err := firebase.NewApp(ctx, nil)
+	app, err := firebase.NewApp(ctx, &firebase.Config{
+		ProjectID: "test-sinope",
+	})
 
 	if err != nil {
 		log.Fatalf("error initializing firebase SDK: %v\n", err)

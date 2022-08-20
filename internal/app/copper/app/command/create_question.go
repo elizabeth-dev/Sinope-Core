@@ -45,6 +45,14 @@ func (h CreateQuestionHandler) Handle(ctx context.Context, cmd CreateQuestion) e
 		return profile.UnauthorizedError{ProfileID: p.Id(), UserID: cmd.FromUser}
 	}
 	*/
+
+	// Check if recipient exists
+	_, err := h.profileRepo.GetProfile(ctx, cmd.Recipient)
+
+	if err != nil {
+		return err
+	}
+
 	// Generate new question
 	qr, err := question.NewQuestion(cmd.Id, cmd.Recipient, cmd.Content)
 	if err != nil {
